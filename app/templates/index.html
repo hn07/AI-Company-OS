@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>AI Company Dashboard <small>V2.0.0</small></h1>
+    <p>Bạn là CEO. AI Manager phân rã mục tiêu thành Task, xác định Agent, Priority và Dependency.</p>
+</section>
+
+<section class="grid">
+{% for label, value in [("Projects", stats.projects), ("Tasks", stats.tasks), ("READY", stats.ready), ("BLOCKED", stats.blocked)] %}
+<div class="card metric"><strong>{{ value }}</strong><span>{{ label }}</span></div>
+{% endfor %}
+</section>
+
+<section class="card">
+    <h2>🚀 Giao mục tiêu mới</h2>
+    <form method="post" action="/projects/create">
+        <label>Tên dự án</label>
+        <input name="name" required placeholder="Ví dụ: Invoice Management System">
+        <label>Mô tả / mục tiêu</label>
+        <textarea name="description" required rows="5" placeholder="Tôi muốn xây một phần mềm..."></textarea>
+        <button type="submit">🧠 AI MANAGER LẬP KẾ HOẠCH</button>
+    </form>
+</section>
+
+<section class="grid">
+<div class="card">
+    <h2>📁 Projects</h2>
+    {% if projects %}
+    <table><tr><th>Dự án</th><th>Trạng thái</th><th></th></tr>
+    {% for p in projects %}<tr><td>{{ p["name"] }}</td><td><span class="status">{{ p["status"] }}</span></td><td><a href="/projects/{{ p['id'] }}">Xem</a></td></tr>{% endfor %}
+    </table>
+    {% else %}<p>Chưa có dự án.</p>{% endif %}
+</div>
+
+<div class="card">
+    <h2>🔔 CEO Approval</h2>
+    {% if approvals %}{% for a in approvals %}
+    <div class="approval"><strong>{{ a["project_name"] }}</strong><p>Kế hoạch và Task Queue đang chờ CEO duyệt.</p>
+        <form method="post" action="/approvals/{{ a['id'] }}/approve" class="inline"><button>✅ DUYỆT & KÍCH HOẠT TASK</button></form>
+        <form method="post" action="/approvals/{{ a['id'] }}/reject" class="inline"><input name="comment" placeholder="Lý do sửa"><button class="danger">❌ YÊU CẦU SỬA</button></form>
+    </div>
+    {% endfor %}{% else %}<p>Không có yêu cầu chờ duyệt.</p>{% endif %}
+</div>
+</section>
+{% endblock %}

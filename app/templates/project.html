@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/">← Dashboard</a>
+<section class="card">
+    <h1>{{ project["name"] }}</h1>
+    <p><b>Trạng thái:</b> <span class="status">{{ project["status"] }}</span></p>
+    <p><b>Mục tiêu:</b> {{ project["description"] }}</p>
+</section>
+
+<section class="card">
+    <h2>🧠 Manager Plan V2</h2>
+    <pre>{{ project["plan"] }}</pre>
+</section>
+
+<section class="card">
+    <h2>📋 Task Queue</h2>
+    {% if tasks %}
+    <table><tr><th>#</th><th>Task</th><th>Agent</th><th>Priority</th><th>Dependency</th><th>Status</th></tr>
+    {% for t in tasks %}<tr>
+        <td>{{ t["id"] }}</td><td><b>{{ t["title"] }}</b><br><small>{{ t["description"] }}</small></td>
+        <td>{{ t["assigned_agent"] }}</td><td>{{ t["priority"] }}</td><td>{{ t["dependency"] or "—" }}</td><td><span class="status">{{ t["status"] }}</span></td>
+    </tr>{% endfor %}</table>
+    {% else %}<p>Chưa có Task.</p>{% endif %}
+</section>
+
+<section class="card">
+    <h2>🔐 CEO Approval</h2>
+    {% if approval %}<p>Loại: {{ approval["type"] }}</p><p>Trạng thái: <b>{{ approval["status"] }}</b></p>{% if approval["comment"] %}<p>Ghi chú: {{ approval["comment"] }}</p>{% endif %}{% else %}<p>Không có yêu cầu duyệt.</p>{% endif %}
+</section>
+{% endblock %}
