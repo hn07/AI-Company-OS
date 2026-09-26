@@ -1,39 +1,22 @@
 # Changelog
 
+## [2.1.0] - 2026-09-26
+
+### Added
+- Hardened local Ollama integration.
+- Ollama model availability detection from /api/tags.
+- CEO Dashboard AI status now shows Ollama online/offline and selected model availability.
+- Local AI connection test endpoint.
+- JSON API endpoints: /api/llm/status and /api/llm/test.
+- No new Python dependency; Ollama access still uses Python standard library.
+- Mock/deterministic planner remains the zero-cost default.
+
+### Notes
+- V2.1.0 does not require Ollama.
+- When Ollama is enabled but unavailable, project planning still falls back to the deterministic local planner.
+
 ## [2.0.0] - 2026-09-26
-
-### Added
 - AI Project Manager planning layer.
-- Structured project plans with analysis, objective, risks and dynamic tasks.
-- Local deterministic planner that requires no API key or paid service.
-- Optional Ollama provider for local LLM planning.
-- V1.x database migration for V2 planning fields.
-- Planning engine status on the CEO dashboard.
-- Dynamic task creation from the approved Manager plan.
-
-### Architecture
-- `app/manager/planner.py` handles plan generation and validation.
-- `app/llm/client.py` handles local LLM provider access.
-- Default provider: `mock` / deterministic local planner.
-- Optional provider: `ollama`.
-
-## [1.1.0] - 2026-09-26
-
-### Added
-- Deterministic AI Team execution pipeline after CEO approval.
-- Automatic task creation for Researcher, Developer, Tester and Reviewer.
-- Project lifecycle: APPROVED → IN_PROGRESS → TESTING → REVIEW → COMPLETED.
-- Task execution status and result display.
-- Manager final execution report in Audit Log.
-
-## [1.0.0] - 2026-09-23
-
-### Added
-- CEO project creation.
-- Manager plan generation.
-- CEO approval / revision.
-- Project status tracking.
-- Agent registry.
-- SQLite persistence.
-- Audit logging.
-- FastAPI web dashboard.
+- Structured plans, risks and dynamic tasks.
+- Deterministic local planner and optional Ollama.
+- V1.x database migration for planning fields.
