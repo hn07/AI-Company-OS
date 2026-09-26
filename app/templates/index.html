@@ -10,6 +10,11 @@
       Ollama / {{ llm_status['model'] }}
       {% if llm_status['available'] %}
         <span class="ok">● ONLINE</span>
+        {% if llm_status['model_available'] %}
+          <span class="ok">Model READY</span>
+        {% else %}
+          <span class="warn">Model NOT INSTALLED</span>
+        {% endif %}
       {% else %}
         <span class="warn">● OFFLINE — fallback local planner</span>
       {% endif %}
@@ -17,6 +22,10 @@
       Local deterministic planner
       <span class="ok">● READY</span>
     {% endif %}
+    <div class="engine-actions">
+      <a class="button-link" href="/api/llm/status" target="_blank">Xem trạng thái AI</a>
+      <a class="button-link" href="/api/llm/test" target="_blank">🧪 Test AI</a>
+    </div>
   </div>
 
   <form method="post" action="/projects/create">
