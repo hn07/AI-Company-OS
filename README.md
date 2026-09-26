@@ -1,70 +1,117 @@
 # AI Company OS
 
-## V1.1.0 — AI Team Execution Foundation
+## V2.0.0 — AI Project Manager
 
-Local-first foundation for an AI-managed company.
+Local-first operating foundation for an AI-managed company.
 
 ### Current workflow
 
-CEO → Manager → Project Plan → CEO Approval → Researcher → Developer → Tester → Reviewer → Final Report
+CEO → AI Project Manager → Dynamic Plan → CEO Approval → AI Team → Tester → Reviewer → Final Report
 
-### V1.1.0 includes
-- CEO project creation.
-- Manager plan generation.
-- CEO approval / revision.
-- Automatic execution after CEO approval.
-- Standard task pipeline.
-- Researcher / Developer / Tester / Reviewer agent stubs.
-- Project lifecycle tracking: DRAFT, WAITING_APPROVAL, APPROVED, IN_PROGRESS, TESTING, REVIEW, COMPLETED, REVISION.
-- Task status and results.
-- SQLite persistence.
-- Audit Log.
-- FastAPI web dashboard.
+### V2.0.0 adds
 
-### Important
+- AI Project Manager planning layer.
+- Structured plan:
+  - Analysis
+  - Objective
+  - Risks
+  - Dynamic execution tasks
+- Task-to-agent assignment generated from the plan.
+- Plan validation before CEO approval.
+- Local deterministic planner by default.
+- Optional local Ollama LLM.
+- Automatic database migration from V1.x.
+- Dynamic task execution based on the approved plan.
+- Planning engine status on the CEO Dashboard.
+- Full Audit Log.
 
-V1.1.0 is intentionally local and free. The agents currently simulate execution locally. There is no LLM API connection and therefore no API cost.
+### Zero-cost default
 
-### Run on Windows
+The default configuration is:
 
-1. Install Python 3.12.
-2. Open the repository folder.
-3. Run `install.bat`.
-4. Run `run.bat`.
-5. Open `http://127.0.0.1:8000`.
+`LLM_PROVIDER=mock`
 
-### Test flow
+This does not call an external AI API.
 
-Create a project such as **Test AI Company OS** with the objective **Build a small internal automation tool.** Then:
+To use a real local LLM, install Ollama separately, pull a model, then set:
 
-1. Manager generates the plan.
-2. CEO clicks **CEO APPROVE & START**.
-3. The system creates execution tasks.
-4. Researcher executes research.
-5. Developer executes design and implementation.
-6. Tester executes testing.
-7. Reviewer executes quality review.
-8. Project becomes COMPLETED.
-9. Audit Log records the lifecycle.
+`LLM_PROVIDER=ollama`
 
-### Architecture
+and configure `OLLAMA_MODEL` in `.env`.
 
-- Python
-- FastAPI
-- Jinja2
-- SQLite
-- Local deterministic agents
+### V2 architecture
 
-### Repository
+```
+CEO
+ |
+ v
+AI Project Manager
+ |
+ +--> Analysis
+ +--> Objective
+ +--> Risks
+ +--> Dynamic Task Plan
+ |
+ v
+CEO Approval
+ |
+ v
++-------------+-------------+-------------+
+| Researcher  | Developer   | Tester      |
++-------------+-------------+-------------+
+                    |
+                    v
+                 Reviewer
+                    |
+                    v
+              Final Report
+```
 
-https://github.com/hn07/AI-Company-OS
+### Windows
+
+Use Python 3.12 for the current stable environment.
+
+```bat
+cd /d D:\MyWorkSpace\AI-Company-OS
+git fetch origin
+git checkout v2.0.0
+install.bat
+run.bat
+```
+
+Open:
+
+`http://127.0.0.1:8000`
+
+### Test V2
+
+Create a project with a natural CEO request, for example:
+
+**Project:** Internal Invoice Automation
+
+**Request:** Build an internal tool that reads invoice data and prepares warehouse import information.
+
+The Manager should create a structured plan and show the planning provider.
+
+Then CEO approves the plan. The approved dynamic tasks are created and executed.
+
+### Ollama configuration
+
+Copy `.env.example` to `.env` and set:
+
+```
+LLM_PROVIDER=ollama
+OLLAMA_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5:7b
+```
+
+If Ollama is unavailable, V2 automatically falls back to the deterministic local planner.
 
 ### Version roadmap
 
 - V1.0.0: Foundation / CEO Approval Core
 - V1.1.0: AI Team Execution Foundation
-- V1.x: V1 improvements and hardening
-- V2.0.0: AI Project Manager + real planning/orchestration
+- V2.0.0: AI Project Manager
 - V3.0.0: Multi-Agent
 - V4.0.0: Quality Control
 - V5.0.0: Software Company
@@ -73,6 +120,11 @@ https://github.com/hn07/AI-Company-OS
 - V8.0.0: AI Meeting
 - V9.0.0: Self Healing
 - V10.0.0: AI Company 1.0
+- V11.0.0+: Multi-project and Company expansion
+
+### Repository
+
+https://github.com/hn07/AI-Company-OS
 
 ### License
 
