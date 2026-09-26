@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Form
@@ -6,12 +7,13 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from app.database.database import init_db, get_connection
+from app.llm.client import LLMClient
 from app.manager.manager import create_project_plan, execute_project
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "1.1.0"
+APP_VERSION = "2.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -28,9 +30,16 @@ def dashboard(request: Request):
         "SELECT * FROM projects ORDER BY id DESC"
     ).fetchall()
     db.close()
+
+    llm_status = LLMClient().status()
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "projects": projects, "version": APP_VERSION},
+        {
+            "request": request,
+            "projects": projects,
+            "version": APP_VERSION,
+            "llm_status": llm_status,
+        },
     )
 
 
@@ -71,6 +80,13 @@ def project_detail(request: Request, project_id: int):
     if not project:
         return {"error": "Project not found"}
 
+    plan = None
+    if project["plan_json"]:
+        try:
+            plan = json.loads(project["plan_json"])
+        except json.JSONDecodeError:
+            plan = None
+
     return templates.TemplateResponse(
         "project.html",
         {
@@ -79,6 +95,7 @@ def project_detail(request: Request, project_id: int):
             "approval": approval,
             "tasks": tasks,
             "audit_logs": logs,
+            "plan": plan,
             "version": APP_VERSION,
         },
     )
@@ -111,9 +128,7 @@ def approve(approval_id: int):
     db.commit()
     db.close()
 
-    # V1.1: CEO approval authorizes Manager to execute the agent pipeline.
     execute_project(project_id)
-
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
