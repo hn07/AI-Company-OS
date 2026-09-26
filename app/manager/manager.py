@@ -1,8 +1,12 @@
-from app.database.database import get_connection
+import json
+
 from app.agents.researcher import ResearcherAgent
 from app.agents.developer import DeveloperAgent
 from app.agents.tester import TesterAgent
 from app.agents.reviewer import ReviewerAgent
+from app.database.database import get_connection
+from app.manager.planner import build_plan, plan_to_text
+
 
 AGENTS = {
     "Researcher": ResearcherAgent(),
@@ -21,36 +25,38 @@ def create_project_plan(project_id: int):
         db.close()
         return
 
-    plan = (
-        f"Project: {project['name']}\n\n"
-        "Manager analysis:\n"
-        f"- Objective: {project['description']}\n"
-        "- Step 1: Research requirements and constraints.\n"
-        "- Step 2: Design implementation approach.\n"
-        "- Step 3: Implement solution.\n"
-        "- Step 4: Test implementation.\n"
-        "- Step 5: Review quality and report to CEO.\n"
-    )
+    plan, provider = build_plan(project["name"], project["description"])
+    plan_json = json.dumps(plan, ensure_ascii=False)
+    plan_text = plan_to_text(plan, provider)
 
     db.execute(
-        "UPDATE projects SET status='WAITING_APPROVAL',updated_at=CURRENT_TIMESTAMP "
+        "UPDATE projects SET status='WAITING_APPROVAL', plan_json=?, "
+        "plan_provider=?, manager_analysis=?, updated_at=CURRENT_TIMESTAMP "
         "WHERE id=?",
-        (project_id,),
+        (
+            plan_json,
+            provider,
+            plan.get("analysis", ""),
+            project_id,
+        ),
     )
     db.execute(
         "INSERT INTO approvals(project_id,action,status,notes) VALUES(?,?,?,?)",
-        (project_id, "START_PROJECT", "PENDING", plan),
+        (project_id, "START_PROJECT", "PENDING", plan_text),
     )
     db.execute(
         "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
-        (project_id, "MANAGER_PLAN", plan),
+        (
+            project_id,
+            "MANAGER_PLAN",
+            f"Provider={provider}\n{plan_text}",
+        ),
     )
     db.commit()
     db.close()
 
 
 def create_project_tasks(project_id: int):
-    """Create the standard V1.1 execution pipeline once."""
     db = get_connection()
     existing = db.execute(
         "SELECT COUNT(*) AS total FROM tasks WHERE project_id=?", (project_id,)
@@ -60,39 +66,27 @@ def create_project_tasks(project_id: int):
         db.close()
         return
 
-    tasks = [
-        (
-            "Research requirements",
-            "Collect and structure project requirements and constraints.",
-            "Researcher",
-        ),
-        (
-            "Design implementation",
-            "Convert requirements into a practical implementation approach.",
-            "Developer",
-        ),
-        (
-            "Implement solution",
-            "Execute the implementation stage using the approved plan.",
-            "Developer",
-        ),
-        (
-            "Test implementation",
-            "Run functional checks and record test results.",
-            "Tester",
-        ),
-        (
-            "Review quality",
-            "Review the work and prepare the final quality report.",
-            "Reviewer",
-        ),
-    ]
+    project = db.execute(
+        "SELECT plan_json FROM projects WHERE id=?", (project_id,)
+    ).fetchone()
 
-    for title, description, agent in tasks:
+    if not project or not project["plan_json"]:
+        db.close()
+        return
+
+    plan = json.loads(project["plan_json"])
+
+    for task in plan["tasks"]:
         db.execute(
             "INSERT INTO tasks(project_id,title,description,assigned_agent,status) "
             "VALUES(?,?,?,?,?)",
-            (project_id, title, description, agent, "PENDING"),
+            (
+                project_id,
+                task["title"],
+                task["description"],
+                task["agent"],
+                "PENDING",
+            ),
         )
 
     db.execute(
@@ -100,7 +94,7 @@ def create_project_tasks(project_id: int):
         (
             project_id,
             "TASKS_CREATED",
-            "V1.1 execution pipeline created: Research → Design → Implement → Test → Review",
+            f"Manager created {len(plan['tasks'])} tasks from approved plan.",
         ),
     )
     db.commit()
@@ -116,9 +110,7 @@ def _run_task(task_id: int):
         db.close()
         return
 
-    db.execute(
-        "UPDATE tasks SET status='RUNNING' WHERE id=?", (task_id,)
-    )
+    db.execute("UPDATE tasks SET status='RUNNING' WHERE id=?", (task_id,))
     db.commit()
     db.close()
 
@@ -138,17 +130,13 @@ def _run_task(task_id: int):
 
 
 def execute_project(project_id: int):
-    """Run the V1.1 deterministic agent pipeline after CEO approval."""
+    """Execute the approved Manager plan in dependency order."""
     db = get_connection()
     project = db.execute(
         "SELECT * FROM projects WHERE id=?", (project_id,)
     ).fetchone()
 
-    if not project:
-        db.close()
-        return
-
-    if project["status"] != "APPROVED":
+    if not project or project["status"] != "APPROVED":
         db.close()
         return
 
@@ -159,7 +147,11 @@ def execute_project(project_id: int):
     )
     db.execute(
         "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
-        (project_id, "PROJECT_STARTED", "CEO approval accepted; Manager started execution."),
+        (
+            project_id,
+            "PROJECT_STARTED",
+            "CEO approval accepted; Manager started the approved dynamic plan.",
+        ),
     )
     db.commit()
     db.close()
@@ -168,55 +160,62 @@ def execute_project(project_id: int):
 
     db = get_connection()
     tasks = db.execute(
-        "SELECT id FROM tasks WHERE project_id=? ORDER BY id", (project_id,)
+        "SELECT id,assigned_agent FROM tasks WHERE project_id=? ORDER BY id",
+        (project_id,),
     ).fetchall()
     db.close()
 
-    # Research, design and implementation happen in the execution stage.
-    for task in tasks[:3]:
+    test_started = False
+    review_started = False
+
+    for task in tasks:
+        if task["assigned_agent"] == "Tester" and not test_started:
+            db = get_connection()
+            db.execute(
+                "UPDATE projects SET status='TESTING',updated_at=CURRENT_TIMESTAMP "
+                "WHERE id=?",
+                (project_id,),
+            )
+            db.execute(
+                "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+                (project_id, "TESTING_STARTED", "Tester stage started."),
+            )
+            db.commit()
+            db.close()
+            test_started = True
+
+        if task["assigned_agent"] == "Reviewer" and not review_started:
+            db = get_connection()
+            db.execute(
+                "UPDATE projects SET status='REVIEW',updated_at=CURRENT_TIMESTAMP "
+                "WHERE id=?",
+                (project_id,),
+            )
+            db.execute(
+                "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+                (project_id, "REVIEW_STARTED", "Reviewer stage started."),
+            )
+            db.commit()
+            db.close()
+            review_started = True
+
         _run_task(task["id"])
 
     db = get_connection()
-    db.execute(
-        "UPDATE projects SET status='TESTING',updated_at=CURRENT_TIMESTAMP WHERE id=?",
-        (project_id,),
-    )
-    db.execute(
-        "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
-        (project_id, "TESTING_STARTED", "Tester agent stage started."),
-    )
-    db.commit()
-    db.close()
-
-    if len(tasks) >= 4:
-        _run_task(tasks[3]["id"])
-
-    db = get_connection()
-    db.execute(
-        "UPDATE projects SET status='REVIEW',updated_at=CURRENT_TIMESTAMP WHERE id=?",
-        (project_id,),
-    )
-    db.execute(
-        "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
-        (project_id, "REVIEW_STARTED", "Reviewer agent stage started."),
-    )
-    db.commit()
-    db.close()
-
-    if len(tasks) >= 5:
-        _run_task(tasks[4]["id"])
-
-    db = get_connection()
     summary = db.execute(
-        "SELECT title,status,result FROM tasks WHERE project_id=? ORDER BY id",
+        "SELECT title,assigned_agent,status,result FROM tasks "
+        "WHERE project_id=? ORDER BY id",
         (project_id,),
     ).fetchall()
+
     summary_text = "\n".join(
-        f"- {row['title']}: {row['status']}" for row in summary
+        f"- [{row['assigned_agent']}] {row['title']}: {row['status']}"
+        for row in summary
     )
 
     db.execute(
-        "UPDATE projects SET status='COMPLETED',updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        "UPDATE projects SET status='COMPLETED',updated_at=CURRENT_TIMESTAMP "
+        "WHERE id=?",
         (project_id,),
     )
     db.execute(
