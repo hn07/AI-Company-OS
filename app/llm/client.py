@@ -23,7 +23,7 @@ _load_dotenv()
 
 
 class LLMClient:
-    """Small provider wrapper. V2 supports local Ollama or a deterministic fallback."""
+    """Provider wrapper for the local planner and optional local Ollama."""
 
     def __init__(self):
         self.provider = os.getenv("LLM_PROVIDER", "mock").lower()
@@ -37,6 +37,7 @@ class LLMClient:
                 "provider": self.provider,
                 "available": True,
                 "model": "deterministic-local-planner",
+                "model_available": True,
             }
 
         try:
@@ -46,17 +47,27 @@ class LLMClient:
                 method="GET",
             )
             with urlopen(request, timeout=5) as response:
-                json.loads(response.read().decode("utf-8"))
+                data = json.loads(response.read().decode("utf-8"))
+
+            models = [m.get("name", "") for m in data.get("models", [])]
+            model_available = self.model in models or any(
+                name.split(":")[0] == self.model.split(":")[0] for name in models
+            )
+
             return {
                 "provider": "ollama",
                 "available": True,
                 "model": self.model,
+                "model_available": model_available,
+                "models": models,
             }
         except Exception as exc:
             return {
                 "provider": "ollama",
                 "available": False,
                 "model": self.model,
+                "model_available": False,
+                "models": [],
                 "error": str(exc),
             }
 
@@ -100,3 +111,25 @@ class LLMClient:
             return json.loads(content)
         except json.JSONDecodeError as exc:
             raise RuntimeError("Ollama returned invalid JSON") from exc
+
+    def test_connection(self) -> dict:
+        if self.provider != "ollama":
+            return {
+                "ok": True,
+                "provider": self.provider,
+                "message": "Local deterministic planner is active; no external AI call is used.",
+            }
+
+        result = self.generate_json(
+            'Return JSON only with exactly one key: "message".',
+            'Set "message" to "AI Company OS local AI test OK".',
+        )
+        if result.get("message") != "AI Company OS local AI test OK":
+            raise RuntimeError("Ollama responded, but the test response was unexpected.")
+
+        return {
+            "ok": True,
+            "provider": "ollama",
+            "model": self.model,
+            "message": "Ollama local model test OK.",
+        }
