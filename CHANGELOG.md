@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] - 2026-09-26
+
+### Added
+- AI Project Manager planning layer.
+- Structured project plans with analysis, objective, risks and dynamic tasks.
+- Local deterministic planner that requires no API key or paid service.
+- Optional Ollama provider for local LLM planning.
+- V1.x database migration for V2 planning fields.
+- Planning engine status on the CEO dashboard.
+- Dynamic task creation from the approved Manager plan.
+
+### Architecture
+- `app/manager/planner.py` handles plan generation and validation.
+- `app/llm/client.py` handles local LLM provider access.
+- Default provider: `mock` / deterministic local planner.
+- Optional provider: `ollama`.
+
 ## [1.1.0] - 2026-09-26
 
 ### Added
@@ -8,12 +25,6 @@
 - Project lifecycle: APPROVED → IN_PROGRESS → TESTING → REVIEW → COMPLETED.
 - Task execution status and result display.
 - Manager final execution report in Audit Log.
-- Expanded CEO dashboard and project execution UI.
-
-### Notes
-- Agents are still local stubs in V1.1.0.
-- No LLM/API cost is required.
-- Real LLM orchestration is planned for V2.0.0.
 
 ## [1.0.0] - 2026-09-23
 
