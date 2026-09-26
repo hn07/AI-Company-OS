@@ -2,16 +2,32 @@
 {% block content %}
 <section class="card">
   <h2>CEO Dashboard</h2>
-  <p>CEO tạo dự án → Manager phân tích → CEO duyệt → AI Team thực thi → Tester → Reviewer → Báo cáo.</p>
+  <p>CEO → Manager AI → Plan → CEO Approval → Agent Team → Final Report</p>
+
+  <div class="engine">
+    <b>Planning Engine:</b>
+    {% if llm_status['provider'] == 'ollama' %}
+      Ollama / {{ llm_status['model'] }}
+      {% if llm_status['available'] %}
+        <span class="ok">● ONLINE</span>
+      {% else %}
+        <span class="warn">● OFFLINE — fallback local planner</span>
+      {% endif %}
+    {% else %}
+      Local deterministic planner
+      <span class="ok">● READY</span>
+    {% endif %}
+  </div>
 
   <form method="post" action="/projects/create">
     <label>Tên dự án</label>
     <input name="name" required>
 
-    <label>Mục tiêu / mô tả</label>
-    <textarea name="description" rows="5" required></textarea>
+    <label>Mục tiêu / yêu cầu của CEO</label>
+    <textarea name="description" rows="6" required
+      placeholder="Mô tả điều CEO muốn AI Company xây dựng..."></textarea>
 
-    <button type="submit">🧠 Tạo Project & Lập kế hoạch</button>
+    <button type="submit">🧠 Gửi cho AI Project Manager</button>
   </form>
 </section>
 
@@ -19,12 +35,13 @@
   <h2>Projects</h2>
   {% if projects %}
   <table>
-    <tr><th>ID</th><th>Tên</th><th>Trạng thái</th><th>Ngày tạo</th></tr>
+    <tr><th>ID</th><th>Tên</th><th>Trạng thái</th><th>Planning</th><th>Ngày tạo</th></tr>
     {% for p in projects %}
     <tr>
       <td><a href="/projects/{{ p['id'] }}">{{ p['id'] }}</a></td>
       <td>{{ p['name'] }}</td>
       <td><span class="status">{{ p['status'] }}</span></td>
+      <td>{{ p['plan_provider'] or '—' }}</td>
       <td>{{ p['created_at'] }}</td>
     </tr>
     {% endfor %}
