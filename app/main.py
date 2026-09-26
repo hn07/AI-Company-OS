@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -13,7 +13,7 @@ from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -26,9 +26,7 @@ app.include_router(router)
 @app.get("/")
 def dashboard(request: Request):
     db = get_connection()
-    projects = db.execute(
-        "SELECT * FROM projects ORDER BY id DESC"
-    ).fetchall()
+    projects = db.execute("SELECT * FROM projects ORDER BY id DESC").fetchall()
     db.close()
 
     llm_status = LLMClient().status()
@@ -41,6 +39,28 @@ def dashboard(request: Request):
             "llm_status": llm_status,
         },
     )
+
+
+@app.get("/api/llm/status")
+def llm_status():
+    return JSONResponse(LLMClient().status())
+
+
+@app.get("/api/llm/test")
+def llm_test():
+    client = LLMClient()
+    try:
+        return JSONResponse(client.test_connection())
+    except Exception as exc:
+        return JSONResponse(
+            {
+                "ok": False,
+                "provider": client.provider,
+                "model": client.model,
+                "message": str(exc),
+            },
+            status_code=503,
+        )
 
 
 @app.post("/projects/create")
@@ -61,9 +81,7 @@ def create_project(name: str = Form(...), description: str = Form(...)):
 @app.get("/projects/{project_id}")
 def project_detail(request: Request, project_id: int):
     db = get_connection()
-    project = db.execute(
-        "SELECT * FROM projects WHERE id=?", (project_id,)
-    ).fetchone()
+    project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
     approval = db.execute(
         "SELECT * FROM approvals WHERE project_id=? ORDER BY id DESC LIMIT 1",
         (project_id,),
@@ -113,12 +131,9 @@ def approve(approval_id: int):
         return RedirectResponse("/", status_code=303)
 
     project_id = approval["project_id"]
+    db.execute("UPDATE approvals SET status='APPROVED' WHERE id=?", (approval_id,))
     db.execute(
-        "UPDATE approvals SET status='APPROVED' WHERE id=?", (approval_id,)
-    )
-    db.execute(
-        "UPDATE projects SET status='APPROVED',updated_at=CURRENT_TIMESTAMP "
-        "WHERE id=?",
+        "UPDATE projects SET status='APPROVED',updated_at=CURRENT_TIMESTAMP WHERE id=?",
         (project_id,),
     )
     db.execute(
@@ -151,8 +166,7 @@ def reject(approval_id: int, reason: str = Form("")):
         (reason, approval_id),
     )
     db.execute(
-        "UPDATE projects SET status='REVISION',updated_at=CURRENT_TIMESTAMP "
-        "WHERE id=?",
+        "UPDATE projects SET status='REVISION',updated_at=CURRENT_TIMESTAMP WHERE id=?",
         (project_id,),
     )
     db.execute(
