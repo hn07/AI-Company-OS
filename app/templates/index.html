@@ -1,1 +1,36 @@
-{% extends "base.html" %}{% block content %}<section class="card"><h2>CEO Dashboard</h2><p>CEO tạo dự án → Manager phân tích → CEO duyệt kế hoạch.</p><form method="post" action="/projects/create"><label>Tên dự án</label><input name="name" required><label>Mục tiêu / mô tả</label><textarea name="description" rows="5" required></textarea><button type="submit">🧠 Tạo Project & Lập kế hoạch</button></form></section><section class="card"><h2>Projects</h2>{% if projects %}<table><tr><th>ID</th><th>Tên</th><th>Trạng thái</th><th>Ngày tạo</th></tr>{% for p in projects %}<tr><td><a href="/projects/{{p['id']}}">{{p['id']}}</a></td><td>{{p['name']}}</td><td><span class="status">{{p['status']}}</span></td><td>{{p['created_at']}}</td></tr>{% endfor %}</table>{% else %}<p>Chưa có project.</p>{% endif %}</section>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>CEO Dashboard</h2>
+  <p>CEO tạo dự án → Manager phân tích → CEO duyệt → AI Team thực thi → Tester → Reviewer → Báo cáo.</p>
+
+  <form method="post" action="/projects/create">
+    <label>Tên dự án</label>
+    <input name="name" required>
+
+    <label>Mục tiêu / mô tả</label>
+    <textarea name="description" rows="5" required></textarea>
+
+    <button type="submit">🧠 Tạo Project & Lập kế hoạch</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Projects</h2>
+  {% if projects %}
+  <table>
+    <tr><th>ID</th><th>Tên</th><th>Trạng thái</th><th>Ngày tạo</th></tr>
+    {% for p in projects %}
+    <tr>
+      <td><a href="/projects/{{ p['id'] }}">{{ p['id'] }}</a></td>
+      <td>{{ p['name'] }}</td>
+      <td><span class="status">{{ p['status'] }}</span></td>
+      <td>{{ p['created_at'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>Chưa có project.</p>
+  {% endif %}
+</section>
+{% endblock %}
