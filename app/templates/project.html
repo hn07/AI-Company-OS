@@ -6,51 +6,70 @@
   <h2>{{ project['name'] }}</h2>
   <p><b>Status:</b> <span class="status">{{ project['status'] }}</span></p>
   <p><b>Description:</b> {{ project['description'] }}</p>
+  {% if project['plan_provider'] %}
+    <p><b>Planning Engine:</b> {{ project['plan_provider'] }}</p>
+  {% endif %}
 </section>
 
 <section class="card">
-  <h2>🧠 Manager Plan</h2>
-  {% if approval %}
-    <p><b>Action:</b> {{ approval['action'] }}</p>
-    <pre>{{ approval['notes'] }}</pre>
+  <h2>🧠 Manager Analysis & Plan</h2>
+  {% if plan %}
+    <p><b>Analysis:</b> {{ plan['analysis'] }}</p>
+    <p><b>Objective:</b> {{ plan['objective'] }}</p>
 
-    {% if approval['status'] == 'PENDING' %}
-      <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline">
-        <button>✅ CEO APPROVE & START</button>
-      </form>
-      <form method="post" action="/approvals/{{ approval['id'] }}/reject" class="inline">
-        <input name="reason" placeholder="Lý do yêu cầu sửa">
-        <button class="danger">↻ YÊU CẦU SỬA</button>
-      </form>
-    {% else %}
-      <p><b>Approval:</b> {{ approval['status'] }}</p>
+    {% if plan['risks'] %}
+      <h3>Risks</h3>
+      <ul>
+        {% for risk in plan['risks'] %}
+          <li>{{ risk }}</li>
+        {% endfor %}
+      </ul>
     {% endif %}
+
+    <h3>Planned Tasks</h3>
+    <ol>
+      {% for task in plan['tasks'] %}
+        <li><b>[{{ task['agent'] }}] {{ task['title'] }}</b> — {{ task['description'] }}</li>
+      {% endfor %}
+    </ol>
+  {% elif approval %}
+    <pre>{{ approval['notes'] }}</pre>
+  {% endif %}
+
+  {% if approval and approval['status'] == 'PENDING' %}
+    <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline">
+      <button>✅ CEO APPROVE & START</button>
+    </form>
+    <form method="post" action="/approvals/{{ approval['id'] }}/reject" class="inline">
+      <input name="reason" placeholder="Lý do yêu cầu sửa">
+      <button class="danger">↻ YÊU CẦU SỬA</button>
+    </form>
+  {% elif approval %}
+    <p><b>Approval:</b> {{ approval['status'] }}</p>
   {% endif %}
 </section>
 
 <section class="card">
   <h2>🤖 AI Team</h2>
   <div class="agent-grid">
-    <div>🧠 Manager<br><small>Project Manager</small></div>
+    <div>🧠 Manager<br><small>Dynamic Planner</small></div>
     <div>🔎 Researcher<br><small>Research</small></div>
     <div>💻 Developer<br><small>Development</small></div>
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V1.1 dùng agent pipeline mô phỏng. Chưa kết nối LLM.</p>
+  <p class="muted">V2.0.0 hỗ trợ Local Planner và Ollama.</p>
 </section>
 
 <section class="card">
   <h2>📋 Execution Tasks</h2>
   {% if tasks %}
     <table>
-      <tr>
-        <th>ID</th><th>Task</th><th>Agent</th><th>Status</th><th>Result</th>
-      </tr>
+      <tr><th>ID</th><th>Task</th><th>Agent</th><th>Status</th><th>Result</th></tr>
       {% for t in tasks %}
       <tr>
         <td>{{ t['id'] }}</td>
-        <td>{{ t['title'] }}</td>
+        <td>{{ t['title'] }}<br><small>{{ t['description'] }}</small></td>
         <td>{{ t['assigned_agent'] or '—' }}</td>
         <td><span class="status">{{ t['status'] }}</span></td>
         <td>{{ t['result'] or '—' }}</td>
@@ -58,18 +77,14 @@
       {% endfor %}
     </table>
   {% else %}
-    <p>Task chưa được tạo. CEO cần duyệt Manager Plan trước.</p>
+    <p>Task sẽ được tạo từ Manager Plan sau khi CEO duyệt.</p>
   {% endif %}
 </section>
 
 <section class="card">
   <h2>🔐 Audit Log</h2>
-  {% if audit_logs %}
-    {% for l in audit_logs %}
-      <p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>
-    {% endfor %}
-  {% else %}
-    <p>Chưa có log.</p>
-  {% endif %}
+  {% for l in audit_logs %}
+    <p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>
+  {% endfor %}
 </section>
 {% endblock %}
