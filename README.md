@@ -1,12 +1,17 @@
 # AI Company OS
 
-## V5.1.0 — Background AI Execution + Live Monitor
+## V5.1.1 — Live Monitor Fix
 
 AI Company OS is a local-first multi-agent company operating system.
 
 ### V5.1 workflow
 
 CEO → AI Project Manager → Dynamic Plan → CEO Approval → Background AI Team → Tester/QC → Reviewer/QC → Release Candidate
+
+### V5.1.1 adds
+
+- Fixes the project monitor JavaScript so polling actually starts.
+- Keeps the V5.1.0 background execution workflow unchanged.
 
 ### V5.1.0 adds
 
@@ -33,8 +38,8 @@ OLLAMA_TIMEOUT=120
 ```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v5.1.0
-git pull origin v5.1.0
+git checkout v5.1.1
+git pull origin v5.1.1
 install.bat
 run.bat
 ```
@@ -62,7 +67,8 @@ After the CEO approves, the browser returns immediately. The project page shows 
 - V3.0.0: Multi-Agent
 - V4.0.0: Quality Control
 - V5.0.0: Software Company
-- **V5.1.0: Background Execution + Live Monitor**
+- **V5.1.1: Live Monitor Fix**
+- V5.1.0: Background Execution + Live Monitor
 - V6.0.0: AI Memory
 - V7.0.0: Workflow Automation
 - V8.0.0: AI Meeting
