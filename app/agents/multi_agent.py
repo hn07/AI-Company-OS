@@ -62,6 +62,21 @@ class Agent:
             result = client.generate_json(system, user)
             if not isinstance(result, dict):
                 raise ValueError("Agent response is not a JSON object.")
+
+            allowed_status = {
+                "Tester": {"PASS", "FAIL", "ERROR"},
+                "Reviewer": {"APPROVED", "NEEDS_FIX", "ERROR"},
+                "Researcher": {"COMPLETED", "NEEDS_ATTENTION", "ERROR"},
+                "Developer": {"COMPLETED", "NEEDS_ATTENTION", "ERROR"},
+            }
+            status = result.get("status")
+            if status not in allowed_status.get(self.name, set()):
+                raise ValueError(f"Invalid {self.name} status: {status!r}")
+            result.setdefault("summary", "")
+            result.setdefault("output", "")
+            result.setdefault("issues", [])
+            if not isinstance(result["issues"], list):
+                result["issues"] = [str(result["issues"])]
             return result
         except Exception as exc:
             if self.name == "Tester":
