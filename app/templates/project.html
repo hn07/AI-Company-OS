@@ -45,6 +45,72 @@
   {% elif approval %}<p><b>Approval:</b> {{ approval['status'] }}</p>{% endif %}
 </section>
 
+
+<section class="card">
+  <h2>🗣️ V8 AI Meeting</h2>
+  <p class="muted">Manager tổ chức cuộc họp nội bộ với Researcher, Developer, Tester và Reviewer. Kết quả được lưu lại và chờ CEO quyết định.</p>
+
+  {% if not meeting %}
+    <form method="post" action="/api/projects/{{ project['id'] }}/meeting/create" class="inline">
+      <button>🗣️ TẠO AI MEETING</button>
+    </form>
+  {% else %}
+    <p><b>Meeting:</b> {{ meeting['title'] }}</p>
+    <p><b>Mục tiêu:</b> {{ meeting['objective'] }}</p>
+    <p><b>Trạng thái:</b> <span class="status">{{ meeting['status'] }}</span></p>
+
+    <details open>
+      <summary><b>Agenda</b></summary>
+      <pre>{{ meeting['agenda'] }}</pre>
+    </details>
+
+    {% if meeting['status'] == 'DRAFT' %}
+      <form method="post" action="/api/projects/{{ project['id'] }}/meeting/run" class="inline">
+        <button>▶️ BẮT ĐẦU AI MEETING</button>
+      </form>
+    {% elif meeting['status'] == 'RUNNING' %}
+      <p>⏳ AI Team đang họp và tổng hợp ý kiến...</p>
+      <script>setTimeout(function(){ window.location.reload(); }, 2500);</script>
+    {% endif %}
+
+    {% if meeting['messages'] %}
+      <h3>Ý kiến các Agent</h3>
+      {% for m in meeting['messages'] %}
+        <details style="margin-bottom:8px">
+          <summary><b>{{ m['agent_name'] }}</b> — {{ m['role'] }}</summary>
+          <pre>{{ m['message'] }}</pre>
+          {% if m['recommendation'] %}<p><b>Issues/khuyến nghị:</b> {{ m['recommendation'] }}</p>{% endif %}
+        </details>
+      {% endfor %}
+    {% endif %}
+
+    {% if meeting['decision'] %}
+      <h3>📌 Manager Decision Brief</h3>
+      <pre>{{ meeting['decision']['summary'] }}</pre>
+      {% if meeting['decision']['action_items'] %}
+        <h4>Action Items</h4>
+        <ol>
+        {% for item in meeting['decision']['action_items'] %}<li>{{ item }}</li>{% endfor %}
+        </ol>
+      {% endif %}
+      {% if meeting['decision']['status'] == 'PENDING_CEO' %}
+        <form method="post" action="/api/projects/{{ project['id'] }}/meeting/decision" class="inline">
+          <input type="hidden" name="decision" value="APPROVE">
+          <input name="note" placeholder="CEO ghi chú quyết định">
+          <button>✅ CEO XÁC NHẬN QUYẾT ĐỊNH</button>
+        </form>
+        <form method="post" action="/api/projects/{{ project['id'] }}/meeting/decision" class="inline">
+          <input type="hidden" name="decision" value="REJECT">
+          <input name="note" placeholder="Lý do yêu cầu họp lại">
+          <button class="danger">↻ YÊU CẦU HỌP LẠI</button>
+        </form>
+      {% else %}
+        <p><b>CEO Decision:</b> {{ meeting['decision']['status'] }}</p>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</section>
+
 <section class="card">
   <h2>⚙️ V7 Workflow Automation</h2>
   {% if workflow and workflow['status'] != 'NOT_CREATED' %}
