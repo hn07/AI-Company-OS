@@ -190,6 +190,12 @@ def project_detail(request: Request, project_id: int):
         "SELECT * FROM releases WHERE project_id=? ORDER BY id DESC LIMIT 1",
         (project_id,),
     ).fetchone()
+    memories = db.execute(
+        """SELECT * FROM memories
+           WHERE project_id=? OR project_id IS NULL
+           ORDER BY importance DESC, id DESC LIMIT 20""",
+        (project_id,),
+    ).fetchall()
     db.close()
 
     if not project:
@@ -212,6 +218,7 @@ def project_detail(request: Request, project_id: int):
             "audit_logs": logs,
             "plan": plan,
             "release": release,
+            "memories": memories,
             "version": APP_VERSION,
         },
     )
