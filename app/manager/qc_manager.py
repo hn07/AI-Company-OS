@@ -207,7 +207,7 @@ def execute_project(project_id):
 
         result = _run_task(project_id, task["id"], context)
 
-        if result.get("status") == "ERROR":
+        if result.get("status") in {"ERROR", "NEEDS_ATTENTION"}:
             db = get_connection()
             db.execute(
                 "UPDATE projects SET status='EXECUTION_ERROR',updated_at=CURRENT_TIMESTAMP WHERE id=?",
