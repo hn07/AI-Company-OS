@@ -46,6 +46,37 @@
 </section>
 
 <section class="card">
+  <h2>⚙️ V7 Workflow Automation</h2>
+  {% if workflow and workflow['status'] != 'NOT_CREATED' %}
+    <p><b>Workflow:</b> {{ workflow['name'] }}</p>
+    <p><b>Workflow Status:</b> <span class="status">{{ workflow['status'] }}</span>
+      {% if workflow['status'] in ['RUNNING','PAUSED'] %}
+        — Step {{ workflow['current_step'] }}
+      {% endif %}
+    </p>
+    {% if project['status'] == 'IN_PROGRESS' %}
+      <form method="post" action="/api/projects/{{ project['id'] }}/workflow/pause" class="inline">
+        <button>⏸ PAUSE WORKFLOW</button>
+      </form>
+    {% elif project['status'] == 'PAUSED' %}
+      <form method="post" action="/api/projects/{{ project['id'] }}/workflow/resume" class="inline">
+        <button>▶ RESUME WORKFLOW</button>
+      </form>
+    {% endif %}
+    <ol>
+      {% for step in workflow['steps'] %}
+        <li>
+          <b>[{{ step['assigned_agent'] }}]</b> {{ step['title'] }}
+          — <span class="status">{{ step['status'] }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>Workflow sẽ được tạo tự động khi CEO duyệt project.</p>
+  {% endif %}
+</section>
+
+<section class="card">
   <h2>🧠 AI Memory</h2>
   <p class="muted">V6 lưu lại kết quả quan trọng của các Agent và cho phép các Agent sau dùng lại làm context.</p>
   <form method="post" action="/api/projects/{{ project['id'] }}/memories">
@@ -77,7 +108,7 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V6.0.0: AI Memory lưu kết quả và tái sử dụng context giữa các Agent.</p>
+  <p class="muted">V7.0.0: Workflow Automation — tự động điều phối task, dependency, pause/resume và trạng thái workflow.</p>
 </section>
 
 <section class="card">
