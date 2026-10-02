@@ -102,6 +102,36 @@ def init_db():
     );
     """)
 
+    # V7 Workflow Automation.
+    db.executescript("""
+    CREATE TABLE IF NOT EXISTS workflows(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      current_step INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS workflow_steps(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      workflow_id INTEGER NOT NULL,
+      task_id INTEGER NOT NULL,
+      step_order INTEGER NOT NULL,
+      depends_on INTEGER,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      started_at TIMESTAMP,
+      completed_at TIMESTAMP,
+      FOREIGN KEY(workflow_id) REFERENCES workflows(id),
+      FOREIGN KEY(task_id) REFERENCES tasks(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_workflow_steps_workflow ON workflow_steps(workflow_id);
+    CREATE INDEX IF NOT EXISTS idx_workflow_steps_task ON workflow_steps(task_id);
+    """)
+
     # V6 AI Memory.
     db.executescript("""
     CREATE TABLE IF NOT EXISTS memories(
