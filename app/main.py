@@ -10,11 +10,12 @@ from fastapi.staticfiles import StaticFiles
 from app.database.database import init_db, get_connection
 from app.llm.client import LLMClient
 from app.manager.software_manager import create_project_plan, execute_software_project
+from app.memory.memory_manager import save_memory, search_memories
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "5.1.0"
+APP_VERSION = "6.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -78,6 +79,25 @@ def llm_test():
             },
             status_code=503,
         )
+
+
+@app.get("/api/projects/{project_id}/memories")
+def project_memories(project_id: int):
+    memories = search_memories(project_id, limit=30)
+    return JSONResponse({"project_id": project_id, "memories": memories})
+
+
+@app.post("/api/projects/{project_id}/memories")
+def add_project_memory(project_id: int, content: str = Form(...), memory_key: str = Form("CEO Note"), importance: int = Form(8)):
+    memory_id = save_memory(
+        project_id,
+        "CEO",
+        "CEO_NOTE",
+        memory_key.strip() or "CEO Note",
+        content.strip(),
+        importance,
+    )
+    return JSONResponse({"ok": True, "memory_id": memory_id})
 
 
 @app.get("/api/projects/{project_id}/progress")
