@@ -16,34 +16,22 @@
   {% if plan %}
     <p><b>Analysis:</b> {{ plan['analysis'] }}</p>
     <p><b>Objective:</b> {{ plan['objective'] }}</p>
-
     {% if plan['risks'] %}
       <h3>Risks</h3>
-      <ul>
-        {% for risk in plan['risks'] %}
-          <li>{{ risk }}</li>
-        {% endfor %}
-      </ul>
+      <ul>{% for risk in plan['risks'] %}<li>{{ risk }}</li>{% endfor %}</ul>
     {% endif %}
-
     <h3>Planned Tasks</h3>
-    <ol>
-      {% for task in plan['tasks'] %}
-        <li><b>[{{ task['agent'] }}] {{ task['title'] }}</b> — {{ task['description'] }}</li>
-      {% endfor %}
-    </ol>
+    <ol>{% for task in plan['tasks'] %}<li><b>[{{ task['agent'] }}] {{ task['title'] }}</b> — {{ task['description'] }}</li>{% endfor %}</ol>
   {% elif approval %}
     <pre>{{ approval['notes'] }}</pre>
   {% endif %}
 
   {% if approval and approval['status'] == 'PENDING' %}
-    <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline">
-      <button>✅ CEO APPROVE & START</button>
-    </form>
-    <form method="post" action="/approvals/{{ approval['id'] }}/reject" class="inline">
-      <input name="reason" placeholder="Lý do yêu cầu sửa">
-      <button class="danger">↻ YÊU CẦU SỬA</button>
-    </form>
+    <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline"><button>✅ CEO APPROVE & START</button></form>
+    <form method="post" action="/approvals/{{ approval['id'] }}/reject" class="inline"><input name="reason" placeholder="Lý do yêu cầu sửa"><button class="danger">↻ YÊU CẦU SỬA</button></form>
+  {% elif approval and approval['status'] == 'APPROVED' and project['status'] == 'APPROVED' and not tasks %}
+    <p class="warn">Dự án đã được duyệt nhưng quá trình chạy bị gián đoạn. Có thể thử chạy lại an toàn.</p>
+    <form method="post" action="/projects/{{ project['id'] }}/retry"><button>↻ THỬ CHẠY LẠI DỰ ÁN</button></form>
   {% elif approval %}
     <p><b>Approval:</b> {{ approval['status'] }}</p>
   {% endif %}
@@ -58,7 +46,7 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V5.0.0: Software Company tạo Release Candidate sau khi Tester và Reviewer hoàn tất QC.</p>
+  <p class="muted">V5.0.1: Software Company tạo Release Candidate sau khi Tester và Reviewer hoàn tất QC.</p>
 </section>
 
 <section class="card">
@@ -72,7 +60,9 @@
         <td>{{ t['title'] }}<br><small>{{ t['description'] }}</small></td>
         <td>{{ t['assigned_agent'] or '—' }}</td>
         <td><span class="status">{{ t['status'] }}</span></td>
-        <td>{{ t['result'] or '—' }}</td>
+        <td>{{ t['result_status'] or '—' }}</td>
+        <td>{{ t['attempts'] or 0 }}</td>
+        <td><pre>{{ t['result'] or '—' }}</pre></td>
       </tr>
       {% endfor %}
     </table>
@@ -100,8 +90,6 @@
 
 <section class="card">
   <h2>🔐 Audit Log</h2>
-  {% for l in audit_logs %}
-    <p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>
-  {% endfor %}
+  {% for l in audit_logs %}<p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>{% endfor %}
 </section>
 {% endblock %}
