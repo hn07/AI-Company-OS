@@ -8,12 +8,12 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database.database import init_db, get_connection
 from app.llm.client import LLMClient
-from app.manager.manager import create_project_plan, execute_project
+from app.manager.multi_manager import create_project_plan, execute_project
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "2.1.0"
+APP_VERSION = "3.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
