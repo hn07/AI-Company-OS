@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from threading import Thread
 
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -13,7 +14,7 @@ from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "5.0.0"
+APP_VERSION = "5.1.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -23,20 +24,36 @@ init_db()
 app.include_router(router)
 
 
+def _run_project_background(project_id: int):
+    try:
+        execute_software_project(project_id)
+    except Exception as exc:
+        db = get_connection()
+        db.execute(
+            "UPDATE projects SET status='EXECUTION_ERROR',updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (project_id,),
+        )
+        db.execute(
+            "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+            (project_id, "EXECUTION_ERROR", str(exc)),
+        )
+        db.commit()
+        db.close()
+
+
 @app.get("/")
 def dashboard(request: Request):
     db = get_connection()
     projects = db.execute("SELECT * FROM projects ORDER BY id DESC").fetchall()
     db.close()
 
-    llm_status = LLMClient().status()
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "projects": projects,
             "version": APP_VERSION,
-            "llm_status": llm_status,
+            "llm_status": LLMClient().status(),
         },
     )
 
@@ -61,6 +78,62 @@ def llm_test():
             },
             status_code=503,
         )
+
+
+@app.get("/api/projects/{project_id}/progress")
+def project_progress(project_id: int):
+    db = get_connection()
+    project = db.execute(
+        "SELECT id,name,status,release_status,updated_at FROM projects WHERE id=?",
+        (project_id,),
+    ).fetchone()
+
+    if not project:
+        db.close()
+        return JSONResponse({"error": "Project not found"}, status_code=404)
+
+    tasks = db.execute(
+        """SELECT id,title,assigned_agent,status,attempts,result_status
+           FROM tasks WHERE project_id=? ORDER BY id""",
+        (project_id,),
+    ).fetchall()
+
+    running = next((dict(t) for t in tasks if t["status"] == "RUNNING"), None)
+    completed = sum(1 for t in tasks if t["status"] == "COMPLETED")
+    total = len(tasks)
+
+    if project["status"] == "COMPLETED":
+        progress = 100
+    else:
+        progress = int(completed / total * 100) if total else 0
+
+    latest = db.execute(
+        """SELECT action,details,created_at FROM audit_logs
+           WHERE project_id=? ORDER BY id DESC LIMIT 1""",
+        (project_id,),
+    ).fetchone()
+
+    db.close()
+
+    terminal = project["status"] in {
+        "COMPLETED",
+        "QC_FAILED",
+        "EXECUTION_ERROR",
+    }
+
+    return JSONResponse(
+        {
+            "project_id": project_id,
+            "status": project["status"],
+            "release_status": project["release_status"],
+            "progress": progress,
+            "completed": completed,
+            "total": total,
+            "current_task": running,
+            "latest_event": dict(latest) if latest else None,
+            "terminal": terminal,
+        }
+    )
 
 
 @app.post("/projects/create")
@@ -136,7 +209,11 @@ def approve(approval_id: int):
         return RedirectResponse("/", status_code=303)
 
     project_id = approval["project_id"]
-    db.execute("UPDATE approvals SET status='APPROVED' WHERE id=?", (approval_id,))
+
+    db.execute(
+        "UPDATE approvals SET status='APPROVED' WHERE id=?",
+        (approval_id,),
+    )
     db.execute(
         "UPDATE projects SET status='APPROVED',updated_at=CURRENT_TIMESTAMP WHERE id=?",
         (project_id,),
@@ -148,7 +225,13 @@ def approve(approval_id: int):
     db.commit()
     db.close()
 
-    execute_software_project(project_id)
+    Thread(
+        target=_run_project_background,
+        args=(project_id,),
+        name=f"AICompany-Project-{project_id}",
+        daemon=True,
+    ).start()
+
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
