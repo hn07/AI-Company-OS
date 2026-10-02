@@ -34,7 +34,6 @@ def create_project_plan(project_id):
     )
     db.commit()
     db.close()
-    set_workflow_status(project_id, "COMPLETED")
 
 
 def create_project_tasks(project_id):
@@ -173,7 +172,7 @@ def _find_previous_developer(db, project_id, before_id):
 def execute_project(project_id):
     db = get_connection()
     project = db.execute("SELECT status FROM projects WHERE id=?", (project_id,)).fetchone()
-    if not project or project["status"] != "APPROVED":
+    if not project or project["status"] not in {"APPROVED", "PAUSED"}:
         db.close()
         return
 
@@ -268,6 +267,8 @@ def execute_project(project_id):
                 mark_step_result(project_id, task["id"], False)
                 return
 
+        mark_step_result(project_id, task["id"], True)
+
         if task["assigned_agent"] == "Reviewer":
             retries = 0
             while result.get("status") == "NEEDS_FIX" and retries < MAX_QC_RETRIES:
@@ -326,3 +327,4 @@ def execute_project(project_id):
     )
     db.commit()
     db.close()
+    set_workflow_status(project_id, "COMPLETED")
