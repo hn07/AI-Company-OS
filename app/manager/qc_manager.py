@@ -4,6 +4,7 @@ from app.agents.multi_agent import AGENTS
 from app.database.database import get_connection
 from app.manager.planner import build_plan, plan_to_text
 from app.memory.memory_manager import build_memory_context, remember_task_result
+from app.workflow.workflow_manager import ensure_workflow, is_paused, mark_step_result, mark_step_running, set_workflow_status
 
 MAX_QC_RETRIES = 3
 
@@ -33,6 +34,7 @@ def create_project_plan(project_id):
     )
     db.commit()
     db.close()
+    set_workflow_status(project_id, "COMPLETED")
 
 
 def create_project_tasks(project_id):
@@ -183,6 +185,8 @@ def execute_project(project_id):
     db.close()
 
     create_project_tasks(project_id)
+    ensure_workflow(project_id)
+    set_workflow_status(project_id, "RUNNING")
 
     db = get_connection()
     tasks = db.execute(
@@ -191,6 +195,13 @@ def execute_project(project_id):
     db.close()
 
     for task in tasks:
+        if task["status"] == "COMPLETED":
+            continue
+
+        if is_paused(project_id):
+            return
+
+        mark_step_running(project_id, task["id"])
         db = get_connection()
         context = _task_context(db, project_id, task["id"])
         db.close()
@@ -254,7 +265,7 @@ def execute_project(project_id):
                     (project_id, "QC_LIMIT_REACHED", "Tester still reports FAIL after retry limit."),
                 )
                 db.commit()
-                db.close()
+                mark_step_result(project_id, task["id"], False)
                 return
 
         if task["assigned_agent"] == "Reviewer":
@@ -301,6 +312,7 @@ def execute_project(project_id):
                 )
                 db.commit()
                 db.close()
+                mark_step_result(project_id, task["id"], False)
                 return
 
     db = get_connection()
