@@ -1,5 +1,5 @@
-class DeveloperAgent:
-    name="Developer"
-    role="Development"
-    def run(self, task: str) -> str:
-        return f"[Developer] LLM not connected. Task received: {task}"
+from app.agents.base import BaseAgent
+
+class DeveloperAgent(BaseAgent):
+    name = "Developer"
+    role = "Solution design and implementation"
