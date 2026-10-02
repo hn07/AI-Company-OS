@@ -1,33 +1,25 @@
 # AI Company OS
 
-## V5.0.0 — Software Company
+## V5.1.0 — Background AI Execution + Live Monitor
 
 AI Company OS is a local-first multi-agent company operating system.
 
-### V5 workflow
+### V5.1 workflow
 
-CEO → AI Project Manager → Dynamic Plan → CEO Approval → Researcher → Developer → Tester → Reviewer → Release Candidate
+CEO → AI Project Manager → Dynamic Plan → CEO Approval → Background AI Team → Tester/QC → Reviewer/QC → Release Candidate
 
-### V5.0.0 adds
+### V5.1.0 adds
 
-- Software project lifecycle.
-- Requirements artifact.
-- Architecture artifact.
-- Implementation artifact.
-- Test report.
-- Review report.
-- Release Candidate registry.
-- Release version tracking.
-- Release is created only after quality gates pass.
-- Deployment is still manual and requires a future approval/deployment layer.
+- CEO approval no longer waits for the entire AI pipeline.
+- AI execution runs in a background thread.
+- Live progress monitor on the project page.
+- Current agent and current task display.
+- Completed task count and progress percentage.
+- Latest audit activity display.
+- Automatic page refresh after terminal status.
+- `EXECUTION_ERROR` state and audit log when background execution fails.
 
-### Zero-cost default
-
-`LLM_PROVIDER=mock`
-
-No external AI API is required for the default local workflow.
-
-### Optional local AI
+### Local Ollama
 
 ```env
 LLM_PROVIDER=ollama
@@ -36,20 +28,20 @@ OLLAMA_MODEL=qwen2.5:7b
 OLLAMA_TIMEOUT=120
 ```
 
-### Windows
+### Windows — pull V5.1.0
 
 ```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v5.0.0
-git pull origin v5.0.0
+git checkout v5.1.0
+git pull origin v5.1.0
 install.bat
 run.bat
 ```
 
 Open `http://127.0.0.1:8000`.
 
-### Test V5
+### Test
 
 Create:
 
@@ -59,16 +51,7 @@ Create:
 **Description**
 `Xây dựng phần mềm đọc dữ liệu hóa đơn và chuẩn bị thông tin nhập kho.`
 
-After CEO approval, the system runs the AI Team and QC. When the project reaches COMPLETED, V5 automatically creates a Release Candidate such as `v0.1.0`.
-
-The project page shows:
-- Requirements
-- Architecture
-- Implementation
-- Test Report
-- Review Report
-- Release status
-- Audit Log
+After the CEO approves, the browser returns immediately. The project page shows the live execution monitor while Ollama/AI agents continue in the background.
 
 ### Roadmap
 
@@ -78,7 +61,8 @@ The project page shows:
 - V2.1.0: Local Ollama AI
 - V3.0.0: Multi-Agent
 - V4.0.0: Quality Control
-- **V5.0.0: Software Company**
+- V5.0.0: Software Company
+- **V5.1.0: Background Execution + Live Monitor**
 - V6.0.0: AI Memory
 - V7.0.0: Workflow Automation
 - V8.0.0: AI Meeting
