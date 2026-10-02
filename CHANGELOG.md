@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1] - 2026-10-02
+
+### Fixed
+- Corrected a malformed comment that prevented the V4 migration from adding the tasks.attempts column.
+- Ensure attempts, result_status and feedback are migrated on existing SQLite databases.
+- Preserves existing project and task data; no database reset is required.
+
 ## [5.0.0] - 2026-10-02
 
 ### Added
