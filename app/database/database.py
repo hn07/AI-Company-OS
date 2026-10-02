@@ -81,6 +81,27 @@ def init_db():
     _ensure_column(db, "tasks", "result_status", "TEXT")
     _ensure_column(db, "tasks", "feedback", "TEXT")
 
+    # V5 Software Company fields.
+    _ensure_column(db, "projects", "project_type", "TEXT NOT NULL DEFAULT 'SOFTWARE'")
+    _ensure_column(db, "projects", "release_status", "TEXT NOT NULL DEFAULT 'NOT_RELEASED'")
+
+    db.executescript("""
+    CREATE TABLE IF NOT EXISTS releases(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      version TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'READY',
+      release_notes TEXT,
+      requirements TEXT,
+      architecture TEXT,
+      implementation TEXT,
+      test_report TEXT,
+      review_report TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
+    """)
+
     # V2 migration for databases created by V1.x.
     _ensure_column(db, "projects", "plan_json", "TEXT")
     _ensure_column(db, "projects", "plan_provider", "TEXT")
