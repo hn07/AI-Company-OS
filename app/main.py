@@ -220,6 +220,7 @@ def project_detail(request: Request, project_id: int):
         "SELECT * FROM releases WHERE project_id=? ORDER BY id DESC LIMIT 1",
         (project_id,),
     ).fetchone()
+    workflow = workflow_snapshot(project_id)
     memories = db.execute(
         """SELECT * FROM memories
            WHERE project_id=? OR project_id IS NULL
@@ -249,6 +250,7 @@ def project_detail(request: Request, project_id: int):
             "plan": plan,
             "release": release,
             "memories": memories,
+            "workflow": workflow,
             "version": APP_VERSION,
         },
     )
