@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.0] - 2026-10-02
+
+### Added
+- Project-scoped AI Memory storage in SQLite.
+- Automatic memory creation from Researcher, Developer, Tester and Reviewer task results.
+- Memory retrieval and injection into subsequent Agent context.
+- CEO Note memory entry from the project UI.
+- Project Memory API for listing and adding memories.
+
+### Workflow
+CEO → Manager → Approval → AI Team + Memory → QC → Release Candidate
+
 ## [5.1.1] - 2026-10-02
 
 ### Fixed
