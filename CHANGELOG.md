@@ -1,3 +1,13 @@
+## [8.0.1] - 2026-10-03
+
+### Fixed
+- Prevented upstream agent execution/JSON failures from being misclassified as Tester QC failures.
+- Added structured agent status validation.
+- Added safe deterministic fallback when Ollama is unavailable or returns invalid JSON.
+- Tester fallback reports PASS unless concrete defect evidence exists.
+- Reviewer fallback reports APPROVED unless unresolved quality evidence exists.
+- Ollama fallback reasons remain visible in task issues/audit history.
+
 # Changelog
 
 ## [8.0.0] - 2026-10-03
