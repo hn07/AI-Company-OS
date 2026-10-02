@@ -102,6 +102,23 @@ def init_db():
     );
     """)
 
+    # V6 AI Memory.
+    db.executescript("""
+    CREATE TABLE IF NOT EXISTS memories(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER,
+      agent_name TEXT,
+      memory_type TEXT NOT NULL DEFAULT 'TASK_RESULT',
+      memory_key TEXT,
+      content TEXT NOT NULL,
+      importance INTEGER NOT NULL DEFAULT 5,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_memories_project ON memories(project_id);
+    CREATE INDEX IF NOT EXISTS idx_memories_agent ON memories(agent_name);
+    """)
+
     # V2 migration for databases created by V1.x.
     _ensure_column(db, "projects", "plan_json", "TEXT")
     _ensure_column(db, "projects", "plan_provider", "TEXT")
