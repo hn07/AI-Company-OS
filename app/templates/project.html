@@ -58,7 +58,7 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V4.0.0: Tester/Reviewer có thể phát hiện lỗi, yêu cầu Developer sửa và chạy kiểm tra lại tối đa 3 vòng.</p>
+  <p class="muted">V5.0.0: Software Company tạo Release Candidate sau khi Tester và Reviewer hoàn tất QC.</p>
 </section>
 
 <section class="card">
@@ -78,6 +78,23 @@
     </table>
   {% else %}
     <p>Task sẽ được tạo từ Manager Plan sau khi CEO duyệt.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>🚀 Software Release</h2>
+  {% if release %}
+    <p><b>Release:</b> v{{ release['version'] }}</p>
+    <p><b>Status:</b> <span class="status">{{ release['status'] }}</span></p>
+    <p><b>Release Status:</b> {{ project['release_status'] or 'NOT_RELEASED' }}</p>
+    <p>{{ release['release_notes'] }}</p>
+    <details><summary>Requirements</summary><pre>{{ release['requirements'] or '—' }}</pre></details>
+    <details><summary>Architecture</summary><pre>{{ release['architecture'] or '—' }}</pre></details>
+    <details><summary>Implementation</summary><pre>{{ release['implementation'] or '—' }}</pre></details>
+    <details><summary>Test Report</summary><pre>{{ release['test_report'] or '—' }}</pre></details>
+    <details><summary>Review Report</summary><pre>{{ release['review_report'] or '—' }}</pre></details>
+  {% else %}
+    <p>Release Candidate sẽ được tạo tự động sau khi Project đạt COMPLETED.</p>
   {% endif %}
 </section>
 
