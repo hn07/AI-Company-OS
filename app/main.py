@@ -97,7 +97,7 @@ def add_project_memory(project_id: int, content: str = Form(...), memory_key: st
         content.strip(),
         importance,
     )
-    return JSONResponse({"ok": True, "memory_id": memory_id})
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
 @app.get("/api/projects/{project_id}/progress")
