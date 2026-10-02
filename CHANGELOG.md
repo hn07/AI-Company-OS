@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1] - 2026-10-02
+
+### Fixed
+- Tester uses evidence-based PASS/FAIL behavior and does not invent failures from missing runnable artifacts.
+- LLM execution errors are separated from genuine QC failures.
+- Tester/Reviewer retry execution errors now stop as EXECUTION_ERROR instead of consuming QC retries.
+
 ## [6.0.0] - 2026-10-02
 
 ### Added
