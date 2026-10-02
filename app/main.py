@@ -8,12 +8,12 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database.database import init_db, get_connection
 from app.llm.client import LLMClient
-from app.manager.qc_manager import create_project_plan, execute_project
+from app.manager.software_manager import create_project_plan, execute_software_project
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "4.0.0"
+APP_VERSION = "5.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -93,6 +93,10 @@ def project_detail(request: Request, project_id: int):
         "SELECT * FROM audit_logs WHERE project_id=? ORDER BY id DESC",
         (project_id,),
     ).fetchall()
+    release = db.execute(
+        "SELECT * FROM releases WHERE project_id=? ORDER BY id DESC LIMIT 1",
+        (project_id,),
+    ).fetchone()
     db.close()
 
     if not project:
@@ -114,6 +118,7 @@ def project_detail(request: Request, project_id: int):
             "tasks": tasks,
             "audit_logs": logs,
             "plan": plan,
+            "release": release,
             "version": APP_VERSION,
         },
     )
@@ -143,7 +148,7 @@ def approve(approval_id: int):
     db.commit()
     db.close()
 
-    execute_project(project_id)
+    execute_software_project(project_id)
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
