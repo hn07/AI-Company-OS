@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.1.0] - 2026-10-02
+
+### Added
+- Background execution for approved software projects.
+- Live project progress API at `/api/projects/{project_id}/progress`.
+- Project execution monitor with progress, current agent, current task and latest audit activity.
+- Automatic polling every 1.5 seconds on the project page.
+- Execution error state `EXECUTION_ERROR` with audit logging.
+- CEO approval endpoint now returns immediately while the AI pipeline continues in a background thread.
+
+### Workflow
+CEO → Manager → Approval → Background AI Team → QC → Release Candidate
+
 ## [5.0.0] - 2026-10-02
 
 ### Added
