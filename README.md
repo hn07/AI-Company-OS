@@ -40,13 +40,13 @@ OLLAMA_MODEL=qwen2.5:7b
 OLLAMA_TIMEOUT=120
 ```
 
-### Windows — pull V5.1.0
+### Windows — pull V6.0.0
 
 ```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v5.1.1
-git pull origin v5.1.1
+git checkout v6.0.0
+git pull origin v6.0.0
 install.bat
 run.bat
 ```
