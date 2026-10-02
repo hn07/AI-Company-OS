@@ -1,53 +1,72 @@
 # AI Company OS
 
-## V2.1.0 — Local AI / Ollama hardening
+## V4.0.0 — Quality Control
 
 Local-first operating foundation for an AI-managed company.
 
 ### Current workflow
 
-CEO → AI Project Manager → Dynamic Plan → CEO Approval → AI Team → Tester → Reviewer → Final Report
+CEO → AI Project Manager → Dynamic Plan → CEO Approval → Researcher → Developer → Tester → Reviewer → Final Report
 
-### V2.1.0 adds
+### V4.0.0 adds
 
-- Stronger Ollama integration.
-- Detection of whether the configured Ollama model is installed.
-- CEO Dashboard AI status.
-- One-click Test AI endpoint.
-- /api/llm/status for provider/model status.
-- /api/llm/test for a real local-model JSON test.
-- Zero additional Python dependencies.
+- Tester quality gate: PASS / FAIL.
+- Reviewer quality gate: APPROVED / NEEDS_FIX.
+- Automatic Developer rework when QC fails.
+- Automatic Tester/Reviewer retest after rework.
+- Maximum 3 retry cycles per quality gate.
+- Task attempt counters and QC feedback.
+- Audit Log for every QC decision.
+- QC_FAILED status when the retry limit is reached.
 
 ### Zero-cost default
 
-LLM_PROVIDER=mock
+`LLM_PROVIDER=mock`
 
-This uses the deterministic local planner and does not call an external AI API.
+The local mode uses deterministic/rule-based agents and does not call an external AI API.
 
-### Enable local AI
+### Optional local AI
 
-1. Install Ollama on Windows.
-2. Start Ollama.
-3. Run ollama_setup.bat.
-4. Create .env from .env.example.
-5. Set LLM_PROVIDER=ollama.
-6. Run run.bat.
-7. On the CEO Dashboard confirm Ollama ONLINE and Model READY.
-8. Click Test AI.
-9. Create a project and verify the plan provider becomes ollama.
+Set:
 
-If Ollama or the selected model is unavailable, the system keeps using the deterministic local planner.
+```env
+LLM_PROVIDER=ollama
+OLLAMA_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5:7b
+OLLAMA_TIMEOUT=120
+```
 
 ### Windows
 
+```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v2.1.0
-git pull origin v2.1.0
+git checkout v4.0.0
+git pull origin v4.0.0
 install.bat
 run.bat
+```
 
-Open: http://127.0.0.1:8000
+Open `http://127.0.0.1:8000`.
+
+### Test V4
+
+Create a project such as:
+
+**Name:** Internal Invoice Automation
+
+**Description:** Xây dựng phần mềm đọc dữ liệu hóa đơn và chuẩn bị thông tin nhập kho.
+
+1. CEO creates the project.
+2. Manager creates the dynamic plan.
+3. CEO approves the plan.
+4. Researcher and Developer execute.
+5. Tester checks the result.
+6. If Tester returns FAIL, Developer receives feedback and is run again.
+7. Tester retests, up to 3 QC cycles.
+8. Reviewer checks release quality.
+9. If Reviewer returns NEEDS_FIX, Developer reworks and Reviewer retests.
+10. Project becomes COMPLETED only after the quality gates pass.
 
 ### Roadmap
 
@@ -56,7 +75,7 @@ Open: http://127.0.0.1:8000
 - V2.0.0: AI Project Manager
 - V2.1.0: Local Ollama AI
 - V3.0.0: Multi-Agent
-- V4.0.0: Quality Control
+- **V4.0.0: Quality Control**
 - V5.0.0: Software Company
 - V6.0.0: AI Memory
 - V7.0.0: Workflow Automation
