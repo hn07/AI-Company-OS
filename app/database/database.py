@@ -132,6 +132,49 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_workflow_steps_task ON workflow_steps(task_id);
     """)
 
+
+    # V8 AI Meeting.
+    db.executescript("""
+    CREATE TABLE IF NOT EXISTS meetings(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      objective TEXT NOT NULL,
+      agenda TEXT,
+      status TEXT NOT NULL DEFAULT 'DRAFT',
+      decision TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS meeting_messages(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      meeting_id INTEGER NOT NULL,
+      agent_name TEXT NOT NULL,
+      role TEXT,
+      message TEXT NOT NULL,
+      recommendation TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(meeting_id) REFERENCES meetings(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS meeting_decisions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      meeting_id INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'PENDING_CEO',
+      summary TEXT NOT NULL,
+      action_items TEXT,
+      approved_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(meeting_id) REFERENCES meetings(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_meetings_project ON meetings(project_id);
+    CREATE INDEX IF NOT EXISTS idx_meeting_messages_meeting ON meeting_messages(meeting_id);
+    CREATE INDEX IF NOT EXISTS idx_meeting_decisions_meeting ON meeting_decisions(meeting_id);
+    """)
+
     # V6 AI Memory.
     db.executescript("""
     CREATE TABLE IF NOT EXISTS memories(
