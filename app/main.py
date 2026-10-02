@@ -10,13 +10,14 @@ from fastapi.staticfiles import StaticFiles
 from app.database.database import init_db, get_connection
 from app.llm.client import LLMClient
 from app.manager.software_manager import create_project_plan, execute_software_project
+from app.manager.meeting_manager import create_meeting, get_meeting, run_meeting, decide_meeting
 from app.memory.memory_manager import save_memory, search_memories
 from app.workflow.workflow_manager import workflow_snapshot, pause_workflow, resume_workflow
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "7.0.0"
+APP_VERSION = "8.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -98,6 +99,34 @@ def add_project_memory(project_id: int, content: str = Form(...), memory_key: st
         content.strip(),
         importance,
     )
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
+@app.get("/api/projects/{project_id}/meeting")
+def project_meeting(project_id: int):
+    return JSONResponse(get_meeting(project_id) or {"status": "NOT_CREATED"})
+
+
+@app.post("/api/projects/{project_id}/meeting/create")
+def create_project_meeting(project_id: int):
+    create_meeting(project_id)
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
+@app.post("/api/projects/{project_id}/meeting/run")
+def run_project_meeting(project_id: int):
+    Thread(
+        target=run_meeting,
+        args=(project_id,),
+        name=f"AICompany-Meeting-{project_id}",
+        daemon=True,
+    ).start()
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
+@app.post("/api/projects/{project_id}/meeting/decision")
+def meeting_decision(project_id: int, decision: str = Form(...), note: str = Form("")):
+    decide_meeting(project_id, decision == "APPROVE", note.strip())
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
@@ -221,6 +250,7 @@ def project_detail(request: Request, project_id: int):
         (project_id,),
     ).fetchone()
     workflow = workflow_snapshot(project_id)
+    meeting = get_meeting(project_id)
     memories = db.execute(
         """SELECT * FROM memories
            WHERE project_id=? OR project_id IS NULL
@@ -250,6 +280,7 @@ def project_detail(request: Request, project_id: int):
             "plan": plan,
             "release": release,
             "memories": memories,
+            "meeting": meeting,
             "workflow": workflow,
             "version": APP_VERSION,
         },
