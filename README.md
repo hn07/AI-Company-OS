@@ -1,5 +1,22 @@
 # AI Company OS
 
+## V8.0.0 — AI Meeting
+
+V8 adds an internal AI Meeting layer where Researcher, Developer, Tester and Reviewer submit structured opinions. The Manager synthesizes a decision brief and the CEO explicitly approves or requests a re-meeting.
+
+### V8 workflow
+
+CEO → Manager Plan → CEO Approval → AI Meeting → Agent Opinions → Manager Decision Brief → CEO Decision → Workflow → QC → Release
+
+### V8.0.0 adds
+
+- Persistent AI Meeting, messages and decision tables in SQLite.
+- Meeting agenda generated from the project context.
+- Researcher / Developer / Tester / Reviewer structured opinions.
+- Manager synthesis using local Ollama when enabled; deterministic fallback without LLM.
+- CEO approval or re-meeting decision with audit log.
+- Meeting panel directly on the project page.
+
 ## V7.0.0 — Workflow Automation
 
 AI Company OS is a local-first multi-agent company operating system.
