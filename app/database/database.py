@@ -77,7 +77,13 @@ def init_db():
     );
     """)
 
-    # V4 migration for Quality Control fields.\n    _ensure_column(db, "tasks", "attempts", "INTEGER NOT NULL DEFAULT 0")
+    # V2 migration for databases created by V1.x.
+    _ensure_column(db, "projects", "plan_json", "TEXT")
+    _ensure_column(db, "projects", "plan_provider", "TEXT")
+    _ensure_column(db, "projects", "manager_analysis", "TEXT")
+
+    # V4 migration: ensure every Quality Control task field exists.
+    _ensure_column(db, "tasks", "attempts", "INTEGER NOT NULL DEFAULT 0")
     _ensure_column(db, "tasks", "result_status", "TEXT")
     _ensure_column(db, "tasks", "feedback", "TEXT")
 
@@ -101,11 +107,6 @@ def init_db():
       FOREIGN KEY(project_id) REFERENCES projects(id)
     );
     """)
-
-    # V2 migration for databases created by V1.x.
-    _ensure_column(db, "projects", "plan_json", "TEXT")
-    _ensure_column(db, "projects", "plan_provider", "TEXT")
-    _ensure_column(db, "projects", "manager_analysis", "TEXT")
 
     for name, role in [
         ("Manager", "Project Manager"),
