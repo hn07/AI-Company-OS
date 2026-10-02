@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.1.1] - 2026-10-02
+
+### Fixed
+- Fixed invalid JavaScript escaping in the V5.1.0 project live monitor.
+- Restored automatic polling of `/api/projects/{project_id}/progress` every 1.5 seconds.
+- Live monitor now updates progress, task count, current agent/task and latest activity correctly.
+
+# Changelog
+
 ## [5.1.0] - 2026-10-02
 
 ### Added
