@@ -1,12 +1,19 @@
 # AI Company OS
 
-## V5.1.1 — Live Monitor Fix
+## V6.0.0 — AI Memory
 
 AI Company OS is a local-first multi-agent company operating system.
 
-### V5.1 workflow
+### V6.0 workflow
 
 CEO → AI Project Manager → Dynamic Plan → CEO Approval → Background AI Team → Tester/QC → Reviewer/QC → Release Candidate
+
+### V6.0.0 adds
+
+- SQLite AI Memory for project knowledge.
+- Automatic memory from completed agent results.
+- Memory retrieval is injected into later agent tasks.
+- CEO can add explicit project notes as memory.
 
 ### V5.1.1 adds
 
@@ -67,7 +74,7 @@ After the CEO approves, the browser returns immediately. The project page shows 
 - V3.0.0: Multi-Agent
 - V4.0.0: Quality Control
 - V5.0.0: Software Company
-- **V5.1.1: Live Monitor Fix**
+- **V6.0.0: AI Memory**
 - V5.1.0: Background Execution + Live Monitor
 - V6.0.0: AI Memory
 - V7.0.0: Workflow Automation
