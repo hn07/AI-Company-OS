@@ -1,14 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
 <a href="/">← Dashboard</a>
-
 <section class="card">
   <h2>{{ project['name'] }}</h2>
-  <p><b>Status:</b> <span class="status">{{ project['status'] }}</span></p>
+  <p><b>Status:</b> <span id="project-status" class="status">{{ project['status'] }}</span></p>
   <p><b>Description:</b> {{ project['description'] }}</p>
-  {% if project['plan_provider'] %}
-    <p><b>Planning Engine:</b> {{ project['plan_provider'] }}</p>
-  {% endif %}
+  {% if project['plan_provider'] %}<p><b>Planning Engine:</b> {{ project['plan_provider'] }}</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>⚡ AI Execution Monitor</h2>
+  <div class="execution-state">
+    <div class="progress-row">
+      <div class="progress-track"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+      <strong id="progress-text">0%</strong>
+    </div>
+    <div id="live-state" class="live-state"><span class="pulse"></span><b>Đang chờ AI bắt đầu...</b></div>
+    <div class="execution-meta">
+      <span>Tasks: <b id="task-count">0/0</b></span>
+      <span>Agent: <b id="current-agent">—</b></span>
+      <span>Task: <b id="current-task">—</b></span>
+    </div>
+    <div class="latest-event"><b>Latest activity:</b> <span id="latest-event">—</span></div>
+  </div>
 </section>
 
 <section class="card">
@@ -16,37 +30,19 @@
   {% if plan %}
     <p><b>Analysis:</b> {{ plan['analysis'] }}</p>
     <p><b>Objective:</b> {{ plan['objective'] }}</p>
-
     {% if plan['risks'] %}
-      <h3>Risks</h3>
-      <ul>
-        {% for risk in plan['risks'] %}
-          <li>{{ risk }}</li>
-        {% endfor %}
-      </ul>
+      <h3>Risks</h3><ul>{% for risk in plan['risks'] %}<li>{{ risk }}</li>{% endfor %}</ul>
     {% endif %}
-
     <h3>Planned Tasks</h3>
-    <ol>
-      {% for task in plan['tasks'] %}
-        <li><b>[{{ task['agent'] }}] {{ task['title'] }}</b> — {{ task['description'] }}</li>
-      {% endfor %}
-    </ol>
-  {% elif approval %}
-    <pre>{{ approval['notes'] }}</pre>
-  {% endif %}
+    <ol>{% for task in plan['tasks'] %}<li><b>[{{ task['agent'] }}] {{ task['title'] }}</b> — {{ task['description'] }}</li>{% endfor %}</ol>
+  {% elif approval %}<pre>{{ approval['notes'] }}</pre>{% endif %}
 
   {% if approval and approval['status'] == 'PENDING' %}
-    <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline">
-      <button>✅ CEO APPROVE & START</button>
-    </form>
+    <form method="post" action="/approvals/{{ approval['id'] }}/approve" class="inline"><button>✅ CEO APPROVE & START</button></form>
     <form method="post" action="/approvals/{{ approval['id'] }}/reject" class="inline">
-      <input name="reason" placeholder="Lý do yêu cầu sửa">
-      <button class="danger">↻ YÊU CẦU SỬA</button>
+      <input name="reason" placeholder="Lý do yêu cầu sửa"><button class="danger">↻ YÊU CẦU SỬA</button>
     </form>
-  {% elif approval %}
-    <p><b>Approval:</b> {{ approval['status'] }}</p>
-  {% endif %}
+  {% elif approval %}<p><b>Approval:</b> {{ approval['status'] }}</p>{% endif %}
 </section>
 
 <section class="card">
@@ -58,7 +54,7 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V5.0.0: Software Company tạo Release Candidate sau khi Tester và Reviewer hoàn tất QC.</p>
+  <p class="muted">V5.1.0: AI execution chạy background, giao diện tự cập nhật tiến độ.</p>
 </section>
 
 <section class="card">
@@ -72,13 +68,13 @@
         <td>{{ t['title'] }}<br><small>{{ t['description'] }}</small></td>
         <td>{{ t['assigned_agent'] or '—' }}</td>
         <td><span class="status">{{ t['status'] }}</span></td>
-        <td>{{ t['result'] or '—' }}</td>
+        <td>{{ t['result_status'] or '—' }}</td>
+        <td>{{ t['attempts'] or 0 }}</td>
+        <td><details><summary>Xem</summary><pre>{{ t['result'] or '—' }}</pre></details></td>
       </tr>
       {% endfor %}
     </table>
-  {% else %}
-    <p>Task sẽ được tạo từ Manager Plan sau khi CEO duyệt.</p>
-  {% endif %}
+  {% else %}<p>Task sẽ được tạo từ Manager Plan sau khi CEO duyệt.</p>{% endif %}
 </section>
 
 <section class="card">
@@ -93,15 +89,63 @@
     <details><summary>Implementation</summary><pre>{{ release['implementation'] or '—' }}</pre></details>
     <details><summary>Test Report</summary><pre>{{ release['test_report'] or '—' }}</pre></details>
     <details><summary>Review Report</summary><pre>{{ release['review_report'] or '—' }}</pre></details>
-  {% else %}
-    <p>Release Candidate sẽ được tạo tự động sau khi Project đạt COMPLETED.</p>
-  {% endif %}
+  {% else %}<p>Release Candidate sẽ được tạo tự động sau khi Project đạt COMPLETED.</p>{% endif %}
 </section>
 
 <section class="card">
   <h2>🔐 Audit Log</h2>
-  {% for l in audit_logs %}
-    <p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>
-  {% endfor %}
+  {% for l in audit_logs %}<p><b>{{ l['action'] }}</b> — {{ l['details'] }}</p>{% endfor %}
 </section>
+
+<script>
+const projectId = {{ project['id'] }};
+let progressTimer = null;
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? "—";
+}
+
+async function refreshProgress() {
+  try {
+    const r = await fetch(\`/api/projects/\${projectId}/progress\`, {cache:"no-store"});
+    if (!r.ok) return;
+    const d = await r.json();
+    const p = Math.max(0, Math.min(100, d.progress || 0));
+
+    document.getElementById("progress-bar").style.width = \`\${p}%\`;
+    setText("progress-text", \`\${p}%\`);
+    setText("project-status", d.status);
+    setText("task-count", \`\${d.completed}/\${d.total}\`);
+
+    if (d.current_task) {
+      setText("current-agent", d.current_task.assigned_agent);
+      setText("current-task", d.current_task.title);
+      document.getElementById("live-state").innerHTML =
+        \`<span class="pulse"></span><b>AI đang chạy: \${d.current_task.assigned_agent}</b>\`;
+    } else if (d.terminal) {
+      setText("current-agent", "—");
+      setText("current-task", "—");
+      document.getElementById("live-state").innerHTML =
+        d.status === "COMPLETED"
+          ? \`<b>✅ AI Company đã hoàn thành</b>\`
+          : \`<b>⚠️ Pipeline đã dừng: \${d.status}</b>\`;
+    }
+
+    if (d.latest_event) {
+      setText("latest-event", \`\${d.latest_event.action} — \${d.latest_event.details}\`);
+    }
+
+    if (d.terminal && progressTimer) {
+      clearInterval(progressTimer);
+      setTimeout(() => window.location.reload(), 800);
+    }
+  } catch (_) {
+    setText("latest-event", "Không lấy được trạng thái realtime.");
+  }
+}
+
+refreshProgress();
+progressTimer = setInterval(refreshProgress, 1500);
+</script>
 {% endblock %}
