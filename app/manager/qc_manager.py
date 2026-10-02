@@ -197,6 +197,20 @@ def execute_project(project_id):
 
         result = _run_task(project_id, task["id"], context)
 
+        if result.get("status") == "ERROR":
+            db = get_connection()
+            db.execute(
+                "UPDATE projects SET status='EXECUTION_ERROR',updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (project_id,),
+            )
+            db.execute(
+                "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+                (project_id, "AGENT_ERROR", f"{task['assigned_agent']} could not execute: {result.get('issues', [])}"),
+            )
+            db.commit()
+            db.close()
+            return
+
         if task["assigned_agent"] == "Tester":
             retries = 0
             while result.get("status") == "FAIL" and retries < MAX_QC_RETRIES:
