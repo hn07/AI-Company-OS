@@ -190,6 +190,9 @@ async function refreshProgress() {
         d.status === "COMPLETED"
           ? "<b>✅ AI Company đã hoàn thành</b>"
           : "<b>⚠️ Pipeline đã dừng: " + d.status + "</b>";
+    } else if (d.status === "PAUSED") {
+      document.getElementById("live-state").innerHTML =
+        "<b>⏸ Workflow đang tạm dừng — CEO có thể Resume</b>";
     } else {
       document.getElementById("live-state").innerHTML =
         '<span class="pulse"></span><b>AI đang khởi động...</b>';
