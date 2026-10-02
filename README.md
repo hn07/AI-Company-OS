@@ -1,33 +1,33 @@
 # AI Company OS
 
-## V4.0.0 — Quality Control
+## V5.0.0 — Software Company
 
-Local-first operating foundation for an AI-managed company.
+AI Company OS is a local-first multi-agent company operating system.
 
-### Current workflow
+### V5 workflow
 
-CEO → AI Project Manager → Dynamic Plan → CEO Approval → Researcher → Developer → Tester → Reviewer → Final Report
+CEO → AI Project Manager → Dynamic Plan → CEO Approval → Researcher → Developer → Tester → Reviewer → Release Candidate
 
-### V4.0.0 adds
+### V5.0.0 adds
 
-- Tester quality gate: PASS / FAIL.
-- Reviewer quality gate: APPROVED / NEEDS_FIX.
-- Automatic Developer rework when QC fails.
-- Automatic Tester/Reviewer retest after rework.
-- Maximum 3 retry cycles per quality gate.
-- Task attempt counters and QC feedback.
-- Audit Log for every QC decision.
-- QC_FAILED status when the retry limit is reached.
+- Software project lifecycle.
+- Requirements artifact.
+- Architecture artifact.
+- Implementation artifact.
+- Test report.
+- Review report.
+- Release Candidate registry.
+- Release version tracking.
+- Release is created only after quality gates pass.
+- Deployment is still manual and requires a future approval/deployment layer.
 
 ### Zero-cost default
 
 `LLM_PROVIDER=mock`
 
-The local mode uses deterministic/rule-based agents and does not call an external AI API.
+No external AI API is required for the default local workflow.
 
 ### Optional local AI
-
-Set:
 
 ```env
 LLM_PROVIDER=ollama
@@ -41,32 +41,34 @@ OLLAMA_TIMEOUT=120
 ```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v4.0.0
-git pull origin v4.0.0
+git checkout v5.0.0
+git pull origin v5.0.0
 install.bat
 run.bat
 ```
 
 Open `http://127.0.0.1:8000`.
 
-### Test V4
+### Test V5
 
-Create a project such as:
+Create:
 
-**Name:** Internal Invoice Automation
+**Name**
+`Internal Invoice Automation`
 
-**Description:** Xây dựng phần mềm đọc dữ liệu hóa đơn và chuẩn bị thông tin nhập kho.
+**Description**
+`Xây dựng phần mềm đọc dữ liệu hóa đơn và chuẩn bị thông tin nhập kho.`
 
-1. CEO creates the project.
-2. Manager creates the dynamic plan.
-3. CEO approves the plan.
-4. Researcher and Developer execute.
-5. Tester checks the result.
-6. If Tester returns FAIL, Developer receives feedback and is run again.
-7. Tester retests, up to 3 QC cycles.
-8. Reviewer checks release quality.
-9. If Reviewer returns NEEDS_FIX, Developer reworks and Reviewer retests.
-10. Project becomes COMPLETED only after the quality gates pass.
+After CEO approval, the system runs the AI Team and QC. When the project reaches COMPLETED, V5 automatically creates a Release Candidate such as `v0.1.0`.
+
+The project page shows:
+- Requirements
+- Architecture
+- Implementation
+- Test Report
+- Review Report
+- Release status
+- Audit Log
 
 ### Roadmap
 
@@ -75,8 +77,8 @@ Create a project such as:
 - V2.0.0: AI Project Manager
 - V2.1.0: Local Ollama AI
 - V3.0.0: Multi-Agent
-- **V4.0.0: Quality Control**
-- V5.0.0: Software Company
+- V4.0.0: Quality Control
+- **V5.0.0: Software Company**
 - V6.0.0: AI Memory
 - V7.0.0: Workflow Automation
 - V8.0.0: AI Meeting
