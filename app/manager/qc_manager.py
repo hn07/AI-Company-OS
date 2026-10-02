@@ -3,6 +3,7 @@ import json
 from app.agents.multi_agent import AGENTS
 from app.database.database import get_connection
 from app.manager.planner import build_plan, plan_to_text
+from app.memory.memory_manager import build_memory_context, remember_task_result
 
 MAX_QC_RETRIES = 3
 
@@ -97,7 +98,9 @@ def _run_task(project_id, task_id, context):
     db.close()
 
     agent = AGENTS.get(task["assigned_agent"])
-    result = agent.run_structured(task["description"], context) if agent else {
+    memory_context = build_memory_context(project_id, task["title"] + " " + task["description"], limit=6)
+    enriched_context = "\n\n".join(part for part in (memory_context, context) if part)
+    result = agent.run_structured(task["description"], enriched_context) if agent else {
         "status": "NEEDS_ATTENTION",
         "summary": "Agent unavailable",
         "output": "",
