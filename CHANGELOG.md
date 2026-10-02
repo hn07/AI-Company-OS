@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.0.0] - 2026-10-03
+
+### Added
+- Workflow Automation Engine with persisted workflow and step state.
+- Automatic workflow creation from Manager-generated tasks.
+- Sequential task dependencies and current-step tracking.
+- CEO Pause/Resume controls for long-running projects.
+- Workflow status in live project progress API and UI.
+- Workflow audit events for pause/resume and completion.
+
+
 ## [6.0.1] - 2026-10-02
 
 ### Fixed
