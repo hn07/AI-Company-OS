@@ -46,6 +46,29 @@
 </section>
 
 <section class="card">
+  <h2>🧠 AI Memory</h2>
+  <p class="muted">V6 lưu lại kết quả quan trọng của các Agent và cho phép các Agent sau dùng lại làm context.</p>
+  <form method="post" action="/api/projects/{{ project['id'] }}/memories">
+    <label>CEO Note</label>
+    <input name="memory_key" placeholder="Ví dụ: Quy tắc nghiệp vụ hóa đơn">
+    <textarea name="content" rows="3" placeholder="Thông tin muốn AI ghi nhớ cho project này"></textarea>
+    <button type="submit">💾 Lưu vào AI Memory</button>
+  </form>
+  {% if memories %}
+    <div style="margin-top:16px">
+    {% for m in memories %}
+      <details style="margin-bottom:8px">
+        <summary><b>{{ m['memory_key'] or 'Memory' }}</b> — {{ m['agent_name'] or 'Company' }} — importance {{ m['importance'] }}</summary>
+        <pre>{{ m['content'] }}</pre>
+      </details>
+    {% endfor %}
+    </div>
+  {% else %}
+    <p>Chưa có memory. Memory sẽ được tạo tự động sau khi Agent hoàn thành task.</p>
+  {% endif %}
+</section>
+
+<section class="card">
   <h2>🤖 AI Team</h2>
   <div class="agent-grid">
     <div>🧠 Manager<br><small>Dynamic Planner</small></div>
@@ -54,7 +77,7 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V5.1.0: AI execution chạy background, giao diện tự cập nhật tiến độ.</p>
+  <p class="muted">V6.0.0: AI Memory lưu kết quả và tái sử dụng context giữa các Agent.</p>
 </section>
 
 <section class="card">
