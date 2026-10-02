@@ -77,6 +77,10 @@ def init_db():
     );
     """)
 
+    # V4 migration for Quality Control fields.\n    _ensure_column(db, "tasks", "attempts", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(db, "tasks", "result_status", "TEXT")
+    _ensure_column(db, "tasks", "feedback", "TEXT")
+
     # V2 migration for databases created by V1.x.
     _ensure_column(db, "projects", "plan_json", "TEXT")
     _ensure_column(db, "projects", "plan_provider", "TEXT")
