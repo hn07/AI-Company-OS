@@ -11,11 +11,12 @@ from app.database.database import init_db, get_connection
 from app.llm.client import LLMClient
 from app.manager.software_manager import create_project_plan, execute_software_project
 from app.memory.memory_manager import save_memory, search_memories
+from app.workflow.workflow_manager import workflow_snapshot, pause_workflow, resume_workflow
 from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "6.0.0"
+APP_VERSION = "7.0.0"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -100,6 +101,29 @@ def add_project_memory(project_id: int, content: str = Form(...), memory_key: st
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
+@app.get("/api/projects/{project_id}/workflow")
+def project_workflow(project_id: int):
+    return JSONResponse(workflow_snapshot(project_id))
+
+
+@app.post("/api/projects/{project_id}/workflow/pause")
+def pause_project_workflow(project_id: int):
+    pause_workflow(project_id)
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
+@app.post("/api/projects/{project_id}/workflow/resume")
+def resume_project_workflow(project_id: int):
+    resume_workflow(project_id)
+    Thread(
+        target=_run_project_background,
+        args=(project_id,),
+        name=f"AICompany-Resume-{project_id}",
+        daemon=True,
+    ).start()
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
 @app.get("/api/projects/{project_id}/progress")
 def project_progress(project_id: int):
     db = get_connection()
@@ -127,6 +151,11 @@ def project_progress(project_id: int):
     else:
         progress = int(completed / total * 100) if total else 0
 
+    workflow = db.execute(
+        "SELECT status,current_step FROM workflows WHERE project_id=?",
+        (project_id,),
+    ).fetchone()
+
     latest = db.execute(
         """SELECT action,details,created_at FROM audit_logs
            WHERE project_id=? ORDER BY id DESC LIMIT 1""",
@@ -152,6 +181,7 @@ def project_progress(project_id: int):
             "current_task": running,
             "latest_event": dict(latest) if latest else None,
             "terminal": terminal,
+            "workflow": dict(workflow) if workflow else None,
         }
     )
 
