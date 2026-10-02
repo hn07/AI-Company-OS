@@ -50,7 +50,11 @@ class Agent:
             f"You are the {self.name} agent in AI Company OS. "
             f"Role: {self.role}. Execute the assigned task using previous agent outputs. "
             "Return ONLY valid JSON with keys status, summary, output, issues. "
-            f"{status_rule} issues must be a JSON array of concrete findings."
+            f"{status_rule} issues must be a JSON array of concrete findings. "
+            "For Tester: PASS unless there is concrete evidence of a reproducible defect, "
+            "contradiction, failed requirement, traceback, or explicit test failure in the supplied evidence. "
+            "Do not invent failures merely because no runnable artifact is available. "
+            "If evidence is incomplete, report that in issues but keep PASS when no defect is demonstrated."
         )
         user = f"ASSIGNED TASK:\n{task}\n\nPREVIOUS AGENT OUTPUTS:\n{context or '(none)'}"
 
