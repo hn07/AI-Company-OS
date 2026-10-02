@@ -13,7 +13,7 @@ from app.routes.projects import router
 
 
 BASE_DIR = Path(__file__).resolve().parent
-APP_VERSION = "5.0.0"
+APP_VERSION = "5.0.1"
 
 app = FastAPI(title="AI Company OS", version=APP_VERSION)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -144,6 +144,42 @@ def approve(approval_id: int):
     db.execute(
         "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
         (project_id, "CEO_APPROVED", f"Approval {approval_id} approved"),
+    )
+    db.commit()
+    db.close()
+
+    execute_software_project(project_id)
+    return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+
+@app.post("/projects/{project_id}/retry")
+def retry_project(project_id: int):
+    # Recovery path for projects approved before an execution error interrupted the workflow.
+    db = get_connection()
+    project = db.execute(
+        "SELECT status FROM projects WHERE id=?", (project_id,)
+    ).fetchone()
+    approval = db.execute(
+        "SELECT status FROM approvals WHERE project_id=? ORDER BY id DESC LIMIT 1",
+        (project_id,),
+    ).fetchone()
+    task_count = db.execute(
+        "SELECT COUNT(*) AS n FROM tasks WHERE project_id=?", (project_id,)
+    ).fetchone()["n"]
+
+    if (
+        not project
+        or project["status"] != "APPROVED"
+        or not approval
+        or approval["status"] != "APPROVED"
+        or task_count > 0
+    ):
+        db.close()
+        return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+    db.execute(
+        "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+        (project_id, "PROJECT_RETRY", "CEO-approved project execution resumed after an interrupted run."),
     )
     db.commit()
     db.close()
