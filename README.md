@@ -1,5 +1,9 @@
 # AI Company OS
 
+## V8.0.1 — QC & Ollama Reliability
+
+V8.0.1 prevents an Ollama/JSON execution problem from turning into a misleading repeated Tester FAIL. Agents validate structured status and use a deterministic local fallback when Ollama cannot return a valid result; the fallback reason is recorded in the task issues.
+
 ## V8.0.0 — AI Meeting
 
 V8 adds an internal AI Meeting layer where Researcher, Developer, Tester and Reviewer submit structured opinions. The Manager synthesizes a decision brief and the CEO explicitly approves or requests a re-meeting.
