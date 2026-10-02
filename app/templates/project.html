@@ -103,45 +103,58 @@ let progressTimer = null;
 
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) el.textContent = value ?? "—";
+  if (el) el.textContent = value == null ? "—" : value;
 }
 
 async function refreshProgress() {
   try {
-    const r = await fetch(`/api/projects/\${projectId}/progress`, {cache:"no-store"});
-    if (!r.ok) return;
+    const url = "/api/projects/" + projectId + "/progress";
+    const r = await fetch(url, {cache: "no-store"});
+    if (!r.ok) {
+      setText("latest-event", "Progress API HTTP " + r.status);
+      return;
+    }
+
     const d = await r.json();
     const p = Math.max(0, Math.min(100, d.progress || 0));
 
-    document.getElementById("progress-bar").style.width = `\${p}%`;
-    setText("progress-text", `\${p}%`);
+    document.getElementById("progress-bar").style.width = p + "%";
+    setText("progress-text", p + "%");
     setText("project-status", d.status);
-    setText("task-count", `\${d.completed}/\${d.total}`);
+    setText("task-count", d.completed + "/" + d.total);
 
     if (d.current_task) {
       setText("current-agent", d.current_task.assigned_agent);
       setText("current-task", d.current_task.title);
       document.getElementById("live-state").innerHTML =
-        `<span class="pulse"></span><b>AI đang chạy: \${d.current_task.assigned_agent}</b>`;
+        '<span class="pulse"></span><b>AI đang chạy: ' +
+        d.current_task.assigned_agent + '</b>';
     } else if (d.terminal) {
       setText("current-agent", "—");
       setText("current-task", "—");
       document.getElementById("live-state").innerHTML =
         d.status === "COMPLETED"
-          ? `<b>✅ AI Company đã hoàn thành</b>`
-          : `<b>⚠️ Pipeline đã dừng: \${d.status}</b>`;
+          ? "<b>✅ AI Company đã hoàn thành</b>"
+          : "<b>⚠️ Pipeline đã dừng: " + d.status + "</b>";
+    } else {
+      document.getElementById("live-state").innerHTML =
+        '<span class="pulse"></span><b>AI đang khởi động...</b>';
     }
 
     if (d.latest_event) {
-      setText("latest-event", `\${d.latest_event.action} — \${d.latest_event.details}`);
+      setText(
+        "latest-event",
+        d.latest_event.action + " — " + d.latest_event.details
+      );
     }
 
     if (d.terminal && progressTimer) {
       clearInterval(progressTimer);
-      setTimeout(() => window.location.reload(), 800);
+      progressTimer = null;
+      setTimeout(function() { window.location.reload(); }, 800);
     }
-  } catch (_) {
-    setText("latest-event", "Không lấy được trạng thái realtime.");
+  } catch (err) {
+    setText("latest-event", "Lỗi progress API: " + err.message);
   }
 }
 
