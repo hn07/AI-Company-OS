@@ -58,14 +58,14 @@
     <div>🧪 Tester<br><small>Testing</small></div>
     <div>🔍 Reviewer<br><small>Quality Review</small></div>
   </div>
-  <p class="muted">V2.0.0 hỗ trợ Local Planner và Ollama.</p>
+  <p class="muted">V4.0.0: Tester/Reviewer có thể phát hiện lỗi, yêu cầu Developer sửa và chạy kiểm tra lại tối đa 3 vòng.</p>
 </section>
 
 <section class="card">
   <h2>📋 Execution Tasks</h2>
   {% if tasks %}
     <table>
-      <tr><th>ID</th><th>Task</th><th>Agent</th><th>Status</th><th>Result</th></tr>
+      <tr><th>ID</th><th>Task</th><th>Agent</th><th>Status</th><th>QC</th><th>Attempts</th><th>Result</th></tr>
       {% for t in tasks %}
       <tr>
         <td>{{ t['id'] }}</td>
