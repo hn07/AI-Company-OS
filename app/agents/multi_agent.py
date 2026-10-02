@@ -66,14 +66,14 @@ class Agent:
         except Exception as exc:
             if self.name == "Tester":
                 return {
-                    "status": "FAIL",
+                    "status": "ERROR",
                     "summary": "Tester could not complete the LLM test.",
                     "output": "",
                     "issues": [str(exc)],
                 }
             if self.name == "Reviewer":
                 return {
-                    "status": "NEEDS_FIX",
+                    "status": "ERROR",
                     "summary": "Reviewer could not complete the LLM review.",
                     "output": "",
                     "issues": [str(exc)],
