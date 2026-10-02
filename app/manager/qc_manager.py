@@ -229,6 +229,19 @@ def execute_project(project_id):
                 retest_context = _task_context(db, project_id, task["id"])
                 db.close()
                 result = _run_task(project_id, task["id"], retest_context)
+                if result.get("status") == "ERROR":
+                    db = get_connection()
+                    db.execute(
+                        "UPDATE projects SET status='EXECUTION_ERROR',updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                        (project_id,),
+                    )
+                    db.execute(
+                        "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+                        (project_id, "AGENT_ERROR", f"Tester retest failed to execute: {result.get('issues', [])}"),
+                    )
+                    db.commit()
+                    db.close()
+                    return
 
             if result.get("status") == "FAIL":
                 db = get_connection()
@@ -262,6 +275,19 @@ def execute_project(project_id):
                 review_context = _task_context(db, project_id, task["id"])
                 db.close()
                 result = _run_task(project_id, task["id"], review_context)
+                if result.get("status") == "ERROR":
+                    db = get_connection()
+                    db.execute(
+                        "UPDATE projects SET status='EXECUTION_ERROR',updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                        (project_id,),
+                    )
+                    db.execute(
+                        "INSERT INTO audit_logs(project_id,action,details) VALUES(?,?,?)",
+                        (project_id, "AGENT_ERROR", f"Reviewer retry failed to execute: {result.get('issues', [])}"),
+                    )
+                    db.commit()
+                    db.close()
+                    return
 
             if result.get("status") == "NEEDS_FIX":
                 db = get_connection()
