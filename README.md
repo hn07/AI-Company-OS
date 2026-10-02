@@ -1,12 +1,19 @@
 # AI Company OS
 
-## V6.0.0 — AI Memory
+## V7.0.0 — Workflow Automation
 
 AI Company OS is a local-first multi-agent company operating system.
 
-### V6.0 workflow
+### V7.0 workflow
 
-CEO → AI Project Manager → Dynamic Plan → CEO Approval → Background AI Team → Tester/QC → Reviewer/QC → Release Candidate
+CEO → AI Project Manager → Dynamic Plan → CEO Approval → Workflow Engine → AI Team → QC → Release Candidate
+
+### V7.0.0 adds
+
+- Persisted Workflow Engine and workflow steps.
+- Automatic dependency-aware execution of Manager tasks.
+- Pause/Resume workflow controls.
+- Workflow status exposed in the live monitor.
 
 ### V6.0.0 adds
 
@@ -40,13 +47,13 @@ OLLAMA_MODEL=qwen2.5:7b
 OLLAMA_TIMEOUT=120
 ```
 
-### Windows — pull V6.0.0
+### Windows — pull V7.0.0
 
 ```bat
 cd /d D:\MyWorkSpace\AI-Company-OS
 git fetch origin
-git checkout v6.0.0
-git pull origin v6.0.0
+git checkout v7.0.0
+git pull origin v7.0.0
 install.bat
 run.bat
 ```
