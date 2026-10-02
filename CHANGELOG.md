@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.0] - 2026-10-03
+
+### Added
+- AI Meeting Engine for internal multi-agent discussion.
+- Persistent meetings, agent messages and CEO decisions in SQLite.
+- Agenda, structured opinions and Manager decision brief.
+- Local Ollama synthesis with deterministic fallback.
+- CEO Approve / Request Re-meeting controls.
+- AI Meeting panel on project detail page.
+- Meeting audit events.
+
+### Workflow
+CEO → Manager → CEO Approval → AI Meeting → Agent Opinions → Manager Decision Brief → CEO Decision → Workflow → QC → Release
+
+# Changelog
+
 ## [7.0.0] - 2026-10-03
 
 ### Added
